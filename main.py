@@ -3,13 +3,17 @@ import networkx as nx
 
 Edge = tuple[object, object, object]
 Node = object
-
+RotorConfig = dict[Node, Edge]
 
 class RotorGraph(nx.MultiDiGraph):
 
     def __init__(self, incoming_graph_data=None, multigraph_input=None, **attr):
-        nx.MultiDiGraph.__init__(self, incoming_graph_data=None, multigraph_input=None, **attr)
-        self.rotor_order = dict()
+        nx.MultiDiGraph.__init__(self)
+        mg = nx.MultiDiGraph(incoming_graph_data, multigraph_input, **attr)
+        self.edges = mg.edges
+        self.nodes = mg.nodes
+        self.sinks = set()
+        self.rotor_order = {edge[0]: [e for e in self.edges if e[0] == edge[0]] for edge in self.edges}
 
 
     def simple_path(n: int = 5):
@@ -39,6 +43,11 @@ class RotorGraph(nx.MultiDiGraph):
         else:
             self.rotor_order[u_for_edge] = [edge]
         return key
+
+
+    def set_sink(self, *nodes: Node):
+        self.sinks.update(nodes)
+
 
 
     def head(self, edge: Edge) -> Node:
@@ -105,13 +114,98 @@ class RotorGraph(nx.MultiDiGraph):
             self.rotor_order[node].reverse()
 
 
-def turn(self, edges: list(Edge)):
-    pass
+
+    def check_rotor_config(self, rotor_config: RotorConfig):
+        """
+        Check if the given rotor configuration is valid for the RotorGraph
+        Input:
+            - rotor_config: Dict containg the rotor configuration to check
+        No output but raises en error if the configuration is not valid.
+        """
+        for node, edge in rotor_config.items():
+            if node not in self.nodes:
+                raise KeyError(f"Invalid node '{node}'")
+
+            if edge not in self.edges:
+                raise ValueError(f"Invalid edge {edge}")
+                
+            if node != self.tail(edge):
+                raise ValueError(f"The node '{node}' does not correspond to the tail of the edge {edge}")
+
+
+    def turn(self, edge: Edge, k: int=1):
+        """
+        Give the next edge of the given edge in rotor order
+        Input:
+            - edge: Edge to turn k times
+            - k: number of times to turn (default: one time)
+        Output:
+            - Resulting Edge after the turn
+        """
+        if edge not in self.edges:
+            raise ValueError(f"Invalid edge {edge}")
+
+        order = self.rotor_order[edge[0]]
+        n = len(order)
+        if (n == 1) or (k%n == 0):
+            return edge
+        
+        current_idx = order.index(edge)
+        next_idx = (current_idx + k) % n
+        
+        return order[next_idx]
+
+
+class ParticleConfig:
+
+    def __init__(self, configuration:dict=None):
+        if configuration is None:
+            self.configuration = dict()
+        else:
+            self.configuration = configuration
+
+    def __str__(self):
+        return repr(self.configuration)
+
+    def __add__(self, other):
+        x = self.configuration
+        y = other.configuration
+        print(x)
+        print(y)
+        res_dic = {k: x.get(k, 0) + y.get(k, 0) for k in set(x) | set(y)}
+        for k in set(x) | set(y):
+            a = x.get(k,0)
+            b = y.get(k,0)
+            print(f"{a} + {b} = {a+b}")
+        return ParticleConfig(res_dic)
+
+    def add_particles(self, node:Node, k:int=1):
+        if node in self.configuration:
+            self.configuration[node] += k
+        else: self.configuration[node] = k
+
+    def remove_particles(self, node:Node, k:int=1):
+        if node in self.configuration:
+            self.configuration[node] -= k
+        else: self.configuration[node] = -k
+
+    def set_particles(self, node:Node, k:int=1):
+        self.configuration[node] = k
 
 
 def main():
     G = RotorGraph.simple_path()
-    print(G.rotor_order)
+    x = ParticleConfig()
+    x.add_particles(1,5)
+    x.add_particles(2,4)
+    x.add_particles(3,7)
+    y = ParticleConfig()
+    y.add_particles(1)
+    y.add_particles(3,9)
+    print(x)
+    print(y)
+    z = x + y
+    print(z.configuration)
 
 
 if __name__ == "__main__":
