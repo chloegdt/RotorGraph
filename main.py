@@ -4,23 +4,24 @@ import networkx as nx
 Edge = tuple[object, object, object]
 Node = object
 RotorConfig = dict[Node, Edge]
+Sinks = set
 
 class RotorGraph(nx.MultiDiGraph):
 
     def __init__(self, incoming_graph_data=None, multigraph_input=None, **attr):
-        nx.MultiDiGraph.__init__(self)
-        mg = nx.MultiDiGraph(incoming_graph_data, multigraph_input, **attr)
-        self.edges = mg.edges
-        self.nodes = mg.nodes
         self.sinks = set()
-        self.rotor_order = {edge[0]: [e for e in self.edges if e[0] == edge[0]] for edge in self.edges}
+        self.rotor_order = dict()
+        nx.MultiDiGraph.__init__(self, incoming_graph_data, multigraph_input, **attr)
+        # self.rotor_order = {edge[0]: [e for e in self.edges if e[0] == edge[0]] for edge in self.edges}
 
 
     def simple_path(n: int = 5):
         graph = RotorGraph()
+        for i in range(n): graph.add_node(i)
         for i in range(1, n-1):
             graph.add_edge(i, i-1)
             graph.add_edge(i, i+1)
+        graph.set_sink(0, n-1)
 
         return graph
 
@@ -122,7 +123,7 @@ class RotorGraph(nx.MultiDiGraph):
             - rotor_config: Dict containg the rotor configuration to check
         No output but raises en error if the configuration is not valid.
         """
-        for node, edge in rotor_config.items():
+        for node, edge in rotor_config.configuration.items():
             if node not in self.nodes:
                 raise KeyError(f"Invalid node '{node}'")
 
@@ -155,29 +156,194 @@ class RotorGraph(nx.MultiDiGraph):
         
         return order[next_idx]
 
+    def step(self, particle_config: object, rotor_config: RotorConfig, sinks: set=None):
+        if sinks == None:
+            sinks = self.sinks
+        node = particle_config.first_node_with_particle(sinks)
+        if node == None: return particle_config
+        edge = rotor_config.configuration[node]
+        succ = self.head(edge)
+        particle_config.transfer_particles(node, succ)
+        rotor_config.configuration[node] = self.turn(edge)
+        return particle_config, rotor_config
+
+    def legal_routing(self, particle_config: object, rotor_config: RotorConfig, sinks: set=None):
+        if sinks is None and len(self.sinks) == 0:
+            print("Infinite loop")
+            return
+
+        if sinks == None:
+            sinks = self.sinks
+
+        while particle_config.first_node_with_particle(sinks) != None:
+            display_path(particle_config, rotor_config)
+            particle_config, rotor_config = self.step(particle_config, rotor_config, sinks)
+
+        return particle_config, rotor_config
+
+
+
+    def step_one_particle(self, node: Node, rotor_config: RotorConfig):
+        """A VOIR"""
+        pass
+
+    def reduced_laplacian_matrix(self, sinks: set=None):
+        """
+           a  b  c
+        a  2 -1  0
+        b -1  2 -1
+        c  0 -1  2
+        """
+        if sinks is None:
+            nodes = self.nodes - self.sinks
+        else:
+            nodes = self.nodes - sinks
+
+        matrix = dict()
+        for u in nodes:
+            matrix[u] = dict()
+            for v in nodes:
+                if u == v:
+                    matrix[u][v] = self.out_degree(u)
+                else:
+                    if self.has_edge(u, v):
+                        matrix[u][v] = -1
+                    else:
+                        matrix[u][v] = 0
+
+        return matrix
+
+
+    def vector_routing(self, particle_config: object, rotor_config: RotorConfig, vector: dict, sinks: set=None):
+        matrix = self.reduced_laplacian_matrix(sinks)
+        for u, c in vector.items():
+
+            for v, p in matrix[u].items():
+                particle_config.configuration[v] -= c*p
+
+
+
+
+
+
+
+
+
+class RotorConfig:
+
+    def __init__(self, configuration: dict or RotorGraph=None):
+        if isinstance(configuration, dict):
+            self.configuration = configuration
+        elif isinstance(configuration, RotorGraph):
+            self.configuration = {node: edges[0] for node, edges in configuration.rotor_order.items()}
+        elif configuration is None:
+            self.configuration = dict()
+        else:
+            raise TypeError("configuration has to be a dict, RotorGraph or nothing")
+
+    def __str__(self):
+        return repr(self.configuration)
+
+
+
+
+
+
+
+
+
 
 class ParticleConfig:
 
     def __init__(self, configuration:dict=None):
-        if configuration is None:
+        if isinstance(configuration, dict):
+            self.configuration = configuration
+        elif isinstance(configuration, RotorGraph):
+            self.configuration = {node: 0 for node in configuration}
+        elif configuration is None:
             self.configuration = dict()
         else:
-            self.configuration = configuration
+            raise TypeError("configuration has to be a dict, RotorGraph or nothing")
 
     def __str__(self):
         return repr(self.configuration)
 
     def __add__(self, other):
-        x = self.configuration
-        y = other.configuration
-        print(x)
-        print(y)
-        res_dic = {k: x.get(k, 0) + y.get(k, 0) for k in set(x) | set(y)}
-        for k in set(x) | set(y):
-            a = x.get(k,0)
-            b = y.get(k,0)
-            print(f"{a} + {b} = {a+b}")
+        config1 = self.configuration
+        if isinstance(other, ParticleConfig):
+            config2 = other.configuration
+            res_dic = {n: config1.get(n, 0) + config2.get(n, 0) for n in set(config1) | set(config2)}
+        elif isinstance(other, int):
+            res_dic = {n: k + other for n, k in config1.items()}
+        else:
+            raise TypeError("Second operand must be an int or a ParticleConfig")
         return ParticleConfig(res_dic)
+
+    def __radd__(self, other):
+        config1 = self.configuration
+        if isinstance(other, ParticleConfig):
+            config2 = other.configuration
+            res_dic = {n: config1.get(n, 0) + config2.get(n, 0) for n in set(config1) | set(config2)}
+        elif isinstance(other, int):
+            res_dic = {n: k + other for n, k in config1.items()}
+        else:
+            raise TypeError("Second operand must be an int or a ParticleConfig")
+        return ParticleConfig(res_dic)
+
+    def __sub__(self, other):
+        config1 = self.configuration
+        if isinstance(other, ParticleConfig):
+            config2 = other.configuration
+            res_dic = {n: config1.get(n, 0) - config2.get(n, 0) for n in set(config1) | set(config2)}
+        elif isinstance(other, int):
+            res_dic = {n: k - other for n, k in config1.items()}
+        else:
+            raise TypeError("Second operand must be an int or a ParticleConfig")
+        return ParticleConfig(res_dic)
+
+    def __mul__(self, other):
+        config1 = self.configuration
+        if isinstance(other, int):
+            res_dic = {n: k * other for n, k in config1.items()}
+        else:
+            raise TypeError("Second operand must be an int")
+        return ParticleConfig(res_dic)
+
+    def __rmul__(self, other):
+        config1 = self.configuration
+        if isinstance(other, int):
+            res_dic = {n: k * other for n, k in config1.items()}
+        else:
+            raise TypeError("Second operand must be an int")
+        return ParticleConfig(res_dic)
+
+    def __truediv__(self, other):
+        config1 = self.configuration
+        if isinstance(other, int):
+            res_dic = {n: k // other for n, k in config1.items()}
+        else:
+            raise TypeError("Second operand must be an int")
+        return ParticleConfig(res_dic)
+
+    def __floordiv__(self, other):
+        config1 = self.configuration
+        if isinstance(other, int):
+            res_dic = {n: k // other for n, k in config1.items()}
+        else:
+            raise TypeError("Second operand must be an int")
+        return ParticleConfig(res_dic)
+
+
+
+    def first_node_with_particle(self, sinks: set):
+        for node, k in self.configuration.items():
+            if k > 0 and node not in sinks:
+                return node
+        return None
+
+    def transfer_particles(self, u: Node, v: Node, k: int=1):
+        self.configuration[u] -= k
+        self.configuration[v] += k
 
     def add_particles(self, node:Node, k:int=1):
         if node in self.configuration:
@@ -193,19 +359,42 @@ class ParticleConfig:
         self.configuration[node] = k
 
 
+5<- 7
+
+
+
+def display_path(particle_config, rotor_config):
+    for i in range(len(particle_config.configuration)-1):
+        print(particle_config.configuration[i],end='')
+        if (i+1, i, 0) in rotor_config.configuration.values():
+            print('<',end='')
+        else: print(' ',end='')
+        print('-',end='')
+        if (i, i+1, 0) in rotor_config.configuration.values():
+            print('>',end='')
+        else: print(' ',end='')
+    print(particle_config.configuration[len(particle_config.configuration)-1])
+
+
+
+
+
+
+
 def main():
     G = RotorGraph.simple_path()
-    x = ParticleConfig()
-    x.add_particles(1,5)
-    x.add_particles(2,4)
-    x.add_particles(3,7)
-    y = ParticleConfig()
-    y.add_particles(1)
-    y.add_particles(3,9)
-    print(x)
-    print(y)
-    z = x + y
-    print(z.configuration)
+    sigma = ParticleConfig(G)
+    sigma = sigma + 2
+    rho = RotorConfig(G)
+
+    print(sigma)
+    print(rho)
+
+    sigma, rho = G.legal_routing(sigma, rho)
+
+    print(sigma)
+    print(rho)
+
 
 
 if __name__ == "__main__":
