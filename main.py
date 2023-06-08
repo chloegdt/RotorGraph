@@ -205,7 +205,7 @@ class RotorGraph(nx.MultiDiGraph):
         return particle_config, rotor_config
 
     def legal_routing(self, particle_config: object, rotor_config: RotorConfig, sinks: set=None,
-                      turn_and_move: bool=False) -> ParticleConfig and RotorConfig:
+                      turn_and_move: bool=False) -> object and RotorConfig:
         """
         Route particles to the sinks
         Input:
@@ -321,7 +321,7 @@ class ParticleConfig:
     def __str__(self):
         return repr(self.configuration)
 
-    def __add__(self, other: ParticleConfig or int) -> ParticleConfig:
+    def __add__(self, other: object or int) -> object:
         """
         Overload the + operator.
         Case: ParticleConfig + ParticleConfig
@@ -344,7 +344,7 @@ class ParticleConfig:
             raise TypeError("Second operand must be an int or a ParticleConfig")
         return ParticleConfig(res_dic)
 
-    def __radd__(self, other: ParticleConfig or int) -> ParticleConfig:
+    def __radd__(self, other: object or int) -> object:
         """
         Same method as __add__ except that it makes the + operator commutative. 
         """
@@ -358,7 +358,7 @@ class ParticleConfig:
             raise TypeError("Second operand must be an int or a ParticleConfig")
         return ParticleConfig(res_dic)
 
-    def __sub__(self, other: ParticleConfig or int) -> ParticleConfig:
+    def __sub__(self, other: object or int) -> object:
         """
         Overload the - operator.
         Case: ParticleConfig - ParticleConfig
@@ -381,7 +381,7 @@ class ParticleConfig:
             raise TypeError("Second operand must be an int or a ParticleConfig")
         return ParticleConfig(res_dic)
 
-    def __mul__(self, other: int) -> ParticleConfig:
+    def __mul__(self, other: int) -> object:
         """
         Overload the * operator.
         Case: ParticleConfig * integer
@@ -399,7 +399,7 @@ class ParticleConfig:
             raise TypeError("Second operand must be an int")
         return ParticleConfig(res_dic)
 
-    def __rmul__(self, other: int) -> ParticleConfig:
+    def __rmul__(self, other: int) -> object:
         """
         Same method as __mul__ except that it makes the * operator commutative. 
         """
@@ -410,7 +410,7 @@ class ParticleConfig:
             raise TypeError("Second operand must be an int")
         return ParticleConfig(res_dic)
 
-    def __truediv__(self, other: int) -> ParticleConfig:
+    def __truediv__(self, other: int) -> object:
         """
         Overload the / operator.
         Case: ParticleConfig / integer
@@ -428,7 +428,7 @@ class ParticleConfig:
             raise TypeError("Second operand must be an int")
         return ParticleConfig(res_dic)
 
-    def __floordiv__(self, other: int) -> ParticleConfig:
+    def __floordiv__(self, other: int) -> object:
         """
         Overload the // operator.
         Case: ParticleConfig // integer
@@ -539,7 +539,7 @@ def display_path(particle_config: ParticleConfig, rotor_config: RotorConfig):
 def main():
     G = RotorGraph.simple_path()
     sigma = ParticleConfig(G)
-    sigma = sigma + 2
+    sigma += 2
     rho = RotorConfig(G)
 
     print(sigma)
