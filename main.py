@@ -581,6 +581,173 @@ class ParticleConfig:
             raise TypeError("Second operand must be an int")
         return ParticleConfig(res_dic)
 
+    def __lt__(self, other: object or int) -> bool:
+        """
+        Overload the < operator.
+        Case: ParticleConfig < ParticleConfig
+            for each node, compare the particles in both configurations
+        Case: ParticleConfig < integer
+            for each node, compare the integer to the number of particles
+        Input: 
+            - self: particle configuration
+            - other: particle configuration or integer
+        Ouput:
+            - True if self < object
+        """
+        config1 = self.configuration
+        if isinstance(other, ParticleConfig):
+            config2 = other.configuration
+            for n in set(config1) | set(config2):
+                if config1.get(n, 0) >= config2.get(n, 0):
+                    return False
+            return True
+        elif isinstance(other, int):
+            for n, k in config1.items():
+                if k >= other:
+                    return False
+            return True
+        else:
+            raise TypeError("Second operand must be an int or a ParticleConfig")
+
+    def __le__(self, other: object or int) -> bool:
+        """
+        Overload the <= operator.
+        Case: ParticleConfig <= ParticleConfig
+            for each node, compare the particles in both configurations
+        Case: ParticleConfig <= integer
+            for each node, compare the integer to the number of particles
+        Input: 
+            - self: particle configuration
+            - other: particle configuration or integer
+        Ouput:
+            - True if self <= object
+        """
+        config1 = self.configuration
+        if isinstance(other, ParticleConfig):
+            config2 = other.configuration
+            for n in set(config1) | set(config2):
+                if config1.get(n, 0) > config2.get(n, 0):
+                    return False
+            return True
+        elif isinstance(other, int):
+            for n, k in config1.items():
+                if k > other:
+                    return False
+            return True
+        else:
+            raise TypeError("Second operand must be an int or a ParticleConfig")
+    
+    def __eq__(self, other: object or int) -> bool:
+        """
+        Overload the == operator.
+        Case: ParticleConfig == ParticleConfig
+            for each node, compare the particles in both configurations
+        Case: ParticleConfig == integer
+            for each node, compare the integer to the number of particles
+        Input: 
+            - self: particle configuration
+            - other: particle configuration or integer
+        Ouput:
+            - True if self == object
+        """
+        config1 = self.configuration
+        if isinstance(other, ParticleConfig):
+            config2 = other.configuration
+            for n in set(config1) | set(config2):
+                if config1.get(n, 0) != config2.get(n, 0):
+                    return False
+            return True
+        elif isinstance(other, int):
+            for n, k in config1.items():
+                if k != other:
+                    return False
+            return True
+        else:
+            raise TypeError("Second operand must be an int or a ParticleConfig")
+    
+    def __ne__(self, other: object or int) -> bool:
+        """
+        Overload the != operator.
+        Case: ParticleConfig != ParticleConfig
+            for each node, compare the particles in both configurations
+        Case: ParticleConfig != integer
+            for each node, compare the integer to the number of particles
+        Input: 
+            - self: particle configuration
+            - other: particle configuration or integer
+        Ouput:
+            - True if self != object
+        """
+        config1 = self.configuration
+        if isinstance(other, ParticleConfig):
+            config2 = other.configuration
+            for n in set(config1) | set(config2):
+                if config1.get(n, 0) == config2.get(n, 0):
+                    return False
+            return True
+        elif isinstance(other, int):
+            for n, k in config1.items():
+                if k == other:
+                    return False
+            return True
+        else:
+            raise TypeError("Second operand must be an int or a ParticleConfig")
+    
+    def __gt__(self, other: object or int) -> bool:
+        """
+        Overload the > operator.
+        Case: ParticleConfig > ParticleConfig
+            for each node, compare the particles in both configurations
+        Case: ParticleConfig > integer
+            for each node, compare the integer to the number of particles
+        Input: 
+            - self: particle configuration
+            - other: particle configuration or integer
+        Ouput:
+            - True if self > object
+        """
+        config1 = self.configuration
+        if isinstance(other, ParticleConfig):
+            config2 = other.configuration
+            for n in set(config1) | set(config2):
+                if config1.get(n, 0) <= config2.get(n, 0):
+                    return False
+            return True
+        elif isinstance(other, int):
+            for n, k in config1.items():
+                if k <= other:
+                    return False
+            return True
+        else:
+            raise TypeError("Second operand must be an int or a ParticleConfig")
+
+    def __ge__(self, other: object or int) -> bool:
+        """
+        Overload the >= operator.
+        Case: ParticleConfig >= ParticleConfig
+            for each node, compare the particles in both configurations
+        Case: ParticleConfig >= integer
+            for each node, compare the integer to the number of particles
+        Input: 
+            - self: particle configuration
+            - other: particle configuration or integer
+        Ouput:
+            - True if self >= object
+        """
+        config1 = self.configuration
+        if isinstance(other, ParticleConfig):
+            config2 = other.configuration
+            for n in set(config1) | set(config2):
+                if config1.get(n, 0) < config2.get(n, 0):
+                    return False
+            return True
+        elif isinstance(other, int):
+            for n, k in config1.items():
+                if k < other:
+                    return False
+            return True
+        else:
+            raise TypeError("Second operand must be an int or a ParticleConfig")
 
 
     def first_node_with_particle(self, sinks: set):
@@ -675,11 +842,10 @@ def main():
     G = RotorGraph.simple_path()
 
     sigma = ParticleConfig(G)
+    s = ParticleConfig(G)
     sigma = 2*sigma + 2
-    sigma + sgima2
-    sigma += 2
+    print(s< sigma)
 
-    sigma1 < sigma2
     rho = RotorConfig(G)
 
     vector = {1: 546156, 2: 456, 3: -789}
