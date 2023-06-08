@@ -47,6 +47,12 @@ class RotorGraph(nx.MultiDiGraph):
 
 
     def set_sink(self, *nodes: Node):
+        """
+        Set the given nodes as a sink
+        Input:
+            - nodes: multiple Node to set as sink
+        No output
+        """
         self.sinks.update(nodes)
 
 
@@ -156,18 +162,63 @@ class RotorGraph(nx.MultiDiGraph):
         
         return order[next_idx]
 
-    def step(self, particle_config: object, rotor_config: RotorConfig, sinks: set=None):
-        if sinks == None:
-            sinks = self.sinks
+    def step(self, particle_config: object, rotor_config: RotorConfig, sinks: set=None,
+             turn_and_move: bool=False):
+        """
+        Make one step of routing
+        Input:
+            - particle_config: the particle configuration of the graph
+            - rotor_config: the rotor configuration of the graph
+            - sinks: set of nodes that are considered as sinks (optional)
+            - turn_and_move: boolean (default: False),
+                if True: turn first then move
+                else (False): move first then move
+        Output:
+            - new particle configuration
+            - new rotor configuration
+        """
+        # retrieve sinks
+        if sinks == None: sinks = self.sinks
+ 
+        # get node
         node = particle_config.first_node_with_particle(sinks)
         if node == None: return particle_config
-        edge = rotor_config.configuration[node]
-        succ = self.head(edge)
-        particle_config.transfer_particles(node, succ)
-        rotor_config.configuration[node] = self.turn(edge)
+
+        if turn_and_move:
+            # turn
+            rotor_config.configuration[node] = self.turn(edge)
+
+            # move
+            edge = rotor_config.configuration[node]
+            succ = self.head(edge)
+            particle_config.transfer_particles(node, succ)
+
+        else: # move and turn
+            # move
+            edge = rotor_config.configuration[node]
+            succ = self.head(edge)
+            particle_config.transfer_particles(node, succ)
+
+            # turn
+            rotor_config.configuration[node] = self.turn(edge)
+
         return particle_config, rotor_config
 
-    def legal_routing(self, particle_config: object, rotor_config: RotorConfig, sinks: set=None):
+    def legal_routing(self, particle_config: object, rotor_config: RotorConfig, sinks: set=None,
+                      turn_and_move: bool=False) -> ParticleConfig and RotorConfig:
+        """
+        Route particles to the sinks
+        Input:
+            - particle_config: the particle configuration of the graph
+            - rotor_config: the rotor configuration of the graph
+            - sinks: set of nodes that are considered as sinks (optional)
+            - turn_and_move: boolean (default: False),
+                if True: turn first then move
+                else (False): move first then move
+        Output:
+            - new particle configuration
+            - new rotor configuration
+        """
         if sinks is None and len(self.sinks) == 0:
             print("Infinite loop")
             return
@@ -176,8 +227,9 @@ class RotorGraph(nx.MultiDiGraph):
             sinks = self.sinks
 
         while particle_config.first_node_with_particle(sinks) != None:
-            display_path(particle_config, rotor_config)
-            particle_config, rotor_config = self.step(particle_config, rotor_config, sinks)
+            # display_path(particle_config, rotor_config) # debug only
+            particle_config, rotor_config = self.step(particle_config, rotor_config, sinks,
+                                                      turn_and_move)
 
         return particle_config, rotor_config
 
@@ -187,12 +239,13 @@ class RotorGraph(nx.MultiDiGraph):
         """A VOIR"""
         pass
 
-    def reduced_laplacian_matrix(self, sinks: set=None):
+    def reduced_laplacian_matrix(self, sinks: set=None) -> dict[Node, dict[Node, int]]:
         """
-           a  b  c
-        a  2 -1  0
-        b -1  2 -1
-        c  0 -1  2
+        Create the reduced laplacian matrix of the graph
+        Input:
+            - sinks: set of nodes that are considered as sinks (optional)
+        Output : 
+            - the reduced laplacian matrix of the graph (dict of dict)
         """
         if sinks is None:
             nodes = self.nodes - self.sinks
@@ -268,7 +321,19 @@ class ParticleConfig:
     def __str__(self):
         return repr(self.configuration)
 
-    def __add__(self, other):
+    def __add__(self, other: ParticleConfig or int) -> ParticleConfig:
+        """
+        Overload the + operator.
+        Case: ParticleConfig + ParticleConfig
+            for each node, do the sum of the particles in both configurations
+        Case: ParticleConfig + integer
+            for each node, add the integer to the number of particles
+        Input: 
+            - self: particle configuration
+            - other: particle configuration or integer
+        Ouput:
+            - new particle configuration
+        """
         config1 = self.configuration
         if isinstance(other, ParticleConfig):
             config2 = other.configuration
@@ -279,7 +344,10 @@ class ParticleConfig:
             raise TypeError("Second operand must be an int or a ParticleConfig")
         return ParticleConfig(res_dic)
 
-    def __radd__(self, other):
+    def __radd__(self, other: ParticleConfig or int) -> ParticleConfig:
+        """
+        Same method as __add__ except that it makes the + operator commutative. 
+        """
         config1 = self.configuration
         if isinstance(other, ParticleConfig):
             config2 = other.configuration
@@ -290,7 +358,19 @@ class ParticleConfig:
             raise TypeError("Second operand must be an int or a ParticleConfig")
         return ParticleConfig(res_dic)
 
-    def __sub__(self, other):
+    def __sub__(self, other: ParticleConfig or int) -> ParticleConfig:
+        """
+        Overload the - operator.
+        Case: ParticleConfig - ParticleConfig
+            for each node, do the substraction of the particles in both configurations
+        Case: ParticleConfig - integer
+            for each node, substract the integer to the number of particles
+        Input: 
+            - self: particle configuration
+            - other: particle configuration or integer
+        Ouput:
+            - new particle configuration
+        """
         config1 = self.configuration
         if isinstance(other, ParticleConfig):
             config2 = other.configuration
@@ -301,7 +381,17 @@ class ParticleConfig:
             raise TypeError("Second operand must be an int or a ParticleConfig")
         return ParticleConfig(res_dic)
 
-    def __mul__(self, other):
+    def __mul__(self, other: int) -> ParticleConfig:
+        """
+        Overload the * operator.
+        Case: ParticleConfig * integer
+            for each node, multiply the integer to the number of particles
+        Input: 
+            - self: particle configuration
+            - other: integer
+        Ouput:
+            - new particle configuration
+        """
         config1 = self.configuration
         if isinstance(other, int):
             res_dic = {n: k * other for n, k in config1.items()}
@@ -309,7 +399,10 @@ class ParticleConfig:
             raise TypeError("Second operand must be an int")
         return ParticleConfig(res_dic)
 
-    def __rmul__(self, other):
+    def __rmul__(self, other: int) -> ParticleConfig:
+        """
+        Same method as __mul__ except that it makes the * operator commutative. 
+        """
         config1 = self.configuration
         if isinstance(other, int):
             res_dic = {n: k * other for n, k in config1.items()}
@@ -317,7 +410,17 @@ class ParticleConfig:
             raise TypeError("Second operand must be an int")
         return ParticleConfig(res_dic)
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: int) -> ParticleConfig:
+        """
+        Overload the / operator.
+        Case: ParticleConfig / integer
+            for each node, divide the number of particles by an integer
+        Input: 
+            - self: particle configuration
+            - other: integer
+        Ouput:
+            - new particle configuration
+        """
         config1 = self.configuration
         if isinstance(other, int):
             res_dic = {n: k // other for n, k in config1.items()}
@@ -325,7 +428,17 @@ class ParticleConfig:
             raise TypeError("Second operand must be an int")
         return ParticleConfig(res_dic)
 
-    def __floordiv__(self, other):
+    def __floordiv__(self, other: int) -> ParticleConfig:
+        """
+        Overload the // operator.
+        Case: ParticleConfig // integer
+            for each node, divide the number of particles by an integer
+        Input: 
+            - self: particle configuration
+            - other: integer
+        Ouput:
+            - new particle configuration
+        """
         config1 = self.configuration
         if isinstance(other, int):
             res_dic = {n: k // other for n, k in config1.items()}
@@ -336,34 +449,76 @@ class ParticleConfig:
 
 
     def first_node_with_particle(self, sinks: set):
+        """
+        Find the first (non sink) node which holds at least one particle
+        Input:
+            - sinks: set of nodes that are considered as sinks
+        Output:
+            - the first non sink node with at least one particle if there is one
+            else None
+        """
         for node, k in self.configuration.items():
             if k > 0 and node not in sinks:
                 return node
         return None
 
     def transfer_particles(self, u: Node, v: Node, k: int=1):
+        """
+        Transfer k particles from node u to node v
+        Input:
+            - u: node giving the k particles
+            - v: node receiving the k particles
+            - k: the number of particles to transfer (default: one particle)
+        No output
+        """
         self.configuration[u] -= k
         self.configuration[v] += k
 
     def add_particles(self, node:Node, k:int=1):
+        """
+        Add the number of particles on the given node
+        Input:
+            - node: the node where to add k particles 
+            - k: the number of particles (default: one particle)
+        No output
+        """
         if node in self.configuration:
             self.configuration[node] += k
         else: self.configuration[node] = k
 
     def remove_particles(self, node:Node, k:int=1):
+        """
+        Remove the number of particles on the given node
+        Input:
+            - node: the node where to remove k particles 
+            - k: the number of particles (default: one particle)
+        No output
+        """
         if node in self.configuration:
             self.configuration[node] -= k
         else: self.configuration[node] = -k
 
     def set_particles(self, node:Node, k:int=1):
+        """
+        Set the number of particles on the given node
+        Input:
+            - node: the node where to set k particles 
+            - k: the number of particles (default: one particle)
+        No output
+        """
         self.configuration[node] = k
 
 
-5<- 7
 
 
-
-def display_path(particle_config, rotor_config):
+def display_path(particle_config: ParticleConfig, rotor_config: RotorConfig):
+    """
+    Give a graphical representation in the terminal of a simple path graph configuration.
+    Input:
+        - particle_config: the particule configuration of the graph
+        - rotor_config: the rotor configuration of the graph
+    No output
+    """
     for i in range(len(particle_config.configuration)-1):
         print(particle_config.configuration[i],end='')
         if (i+1, i, 0) in rotor_config.configuration.values():
