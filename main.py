@@ -11,11 +11,19 @@ class RotorGraph(nx.MultiDiGraph):
     def __init__(self, incoming_graph_data=None, multigraph_input=None, **attr):
         self.sinks = set()
         self.rotor_order = dict()
+        self.edge_index = dict()
         nx.MultiDiGraph.__init__(self, incoming_graph_data, multigraph_input, **attr)
         # self.rotor_order = {edge[0]: [e for e in self.edges if e[0] == edge[0]] for edge in self.edges}
 
 
     def simple_path(n: int = 5):
+        """
+        Create a simple path rotor graph with n nodes including two sinks at the extremities 
+        Input:
+            - n : the number of nodes in the graph (default : five nodes)
+        Output:
+            - a simple path rotor graph
+        """
         graph = RotorGraph()
         for i in range(n): graph.add_node(i)
         for i in range(1, n-1):
@@ -24,6 +32,30 @@ class RotorGraph(nx.MultiDiGraph):
         graph.set_sink(0, n-1)
 
         return graph
+
+
+    def grid(n: int=3, m: int=3):
+        """
+        Create a grid rotor graph n*m nodes
+        Input:
+            - n: number of rows 
+            - m: number of columns
+        Output:
+            - a grid rotor graph
+        """
+        graph = RotorGraph()
+        total_nodes = n*m
+        for i in range(total_nodes): graph.add_node(i)
+        for i in range(n):
+            for j in range(m):
+                node = i*m + j
+                if (node-m) in range(total_nodes): graph.add_edge(node, node-m)
+                if (j+1) in range(m): graph.add_edge(node, node+1)
+                if (node+m) in range(total_nodes): graph.add_edge(node, node+m)
+                if (j-1) in range(m): graph.add_edge(node, node-1)
+
+        return graph
+
 
 
     def add_edge(self, u_for_edge: Node, v_for_edge: Node, key=None, **attr) -> object:
@@ -41,8 +73,10 @@ class RotorGraph(nx.MultiDiGraph):
         edge = (u_for_edge, v_for_edge, key)
         if u_for_edge in self.rotor_order.keys():
             self.rotor_order[u_for_edge].append(edge)
+            self.edge_index[edge] = len(self.rotor_order[u_for_edge]) - 1
         else:
             self.rotor_order[u_for_edge] = [edge]
+            self.edge_index[edge] = 0
         return key
 
 
@@ -109,7 +143,7 @@ class RotorGraph(nx.MultiDiGraph):
                 raise ValueError(f"Not all edges of the node '{node}' are given")
 
         self.rotor_order.update(new_order)
-
+        self.edge_index = rotor_order2edge_index(self.rotor_order)
 
     def invert_rotor_order(self):
         """
@@ -119,7 +153,7 @@ class RotorGraph(nx.MultiDiGraph):
         """
         for node in self.rotor_order:
             self.rotor_order[node].reverse()
-
+        self.edge_index = rotor_order2edge_index(self.rotor_order)
 
 
     def check_rotor_config(self, rotor_config: RotorConfig):
@@ -157,7 +191,7 @@ class RotorGraph(nx.MultiDiGraph):
         if (n == 1) or (k%n == 0):
             return edge
         
-        current_idx = order.index(edge)
+        current_idx = self.edge_index[edge]
         next_idx = (current_idx + k) % n
         
         return order[next_idx]
@@ -347,16 +381,21 @@ class RotorGraph(nx.MultiDiGraph):
         return matrix
 
 
-    def vector_routing(self, particle_config: object, rotor_config: RotorConfig, vector: dict, sinks: set=None, turn_and_move: bool=False):
+    def vector_routing(self, particle_config: object, rotor_config: RotorConfig, vector:
+                       dict[Node:int], sinks: set=None, turn_and_move: bool=False) -> object and RotorConfig:
         """
-         2 -1  0
-        -1  2 -1
-         0 -1  2
-
-
-         1  0 -1
-         2 2 2 2 2
-         
+        Route the graph according to a given vector optimized with the laplacian matrix
+        Input:
+            - particle_config : the particle configuration of the graph
+            - rotor_config : the rotor configuration of the graph
+            - vector : dict[Node:int]
+            - sinks : set of nodes that are considered as sinks
+            - turn_and_move : boolean (default=False)
+                if True: turn first then move
+                else (False): move first then turn
+        Output:
+            - the new particle configuration
+            - the new rotor configuration
         """
         matrix = self.laplacian_matrix(sinks)
         for u, k in vector.items():
@@ -393,6 +432,9 @@ class RotorConfig:
             raise TypeError("configuration has to be a dict, RotorGraph or nothing")
 
     def __str__(self):
+        return repr(self.configuration)
+
+    def __repr__(self):
         return repr(self.configuration)
 
     def find_cycles(self, sinks: set[Node]=set()) -> list[list[Edge]]:
@@ -436,11 +478,6 @@ class RotorConfig:
 
 
 
-
-
-
-
-
 class ParticleConfig:
 
     def __init__(self, configuration:dict=None):
@@ -454,6 +491,9 @@ class ParticleConfig:
             raise TypeError("configuration has to be a dict, RotorGraph or nothing")
 
     def __str__(self):
+        return repr(self.configuration)
+
+    def __repr__(self):
         return repr(self.configuration)
 
     def __add__(self, other: object or int) -> object:
@@ -834,25 +874,27 @@ def display_path(particle_config: ParticleConfig, rotor_config: RotorConfig):
 
 
 
+def rotor_order2edge_index(rotor_order: dict[Node, list[Edge]]) -> dict:
+    """
+    Give the position of the edges in the given rotor order  
+    Input :
+        - rotor_order: the rotor order to convert
+    Output:
+        - dict[Edge: index in rotor order]
+    """
+    dic = dict()
+    for node, edges in rotor_order.items():
+        for edge in edges:
+            dic[edge] = edges.index(edge)
 
-
+    return dic
 
 
 def main():
-    G = RotorGraph.simple_path()
+    G = RotorGraph.grid(2,2)
+    rotor_order = G.rotor_order
+    print(rotor_order)
 
-    sigma = ParticleConfig(G)
-    s = ParticleConfig(G)
-    sigma = 2*sigma + 2
-    print(s< sigma)
-
-    rho = RotorConfig(G)
-
-    vector = {1: 546156, 2: 456, 3: -789}
-
-    display_path(sigma, rho)
-    sigma, rho = G.vector_routing(sigma, rho, vector)
-    display_path(sigma, rho)
 
 
 
