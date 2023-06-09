@@ -1,10 +1,10 @@
 import networkx as nx
 
 
-Edge = tuple[object, object, object]
 Node = object
+Edge = tuple[Node, Node, object]
 RotorConfig = dict[Node, Edge]
-Sinks = set
+Sinks = set[Node]
 
 class RotorGraph(nx.MultiDiGraph):
 
