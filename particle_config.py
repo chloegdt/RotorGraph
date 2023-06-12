@@ -1,9 +1,13 @@
+from vector import Vector
+import rotorgraph
+from types import *
+
 class ParticleConfig(Vector):
 
     def __init__(self, configuration:dict=None):
         if isinstance(configuration, dict):
             self.configuration = configuration
-        elif isinstance(configuration, RotorGraph):
+        elif isinstance(configuration, rotorgraph.RotorGraph):
             self.configuration = {node: 0 for node in configuration}
         elif configuration is None:
             self.configuration = dict()

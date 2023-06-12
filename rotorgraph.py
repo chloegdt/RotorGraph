@@ -1,8 +1,7 @@
 import networkx as nx
-import particle_config
-import rotor_config
-import vector
-
+from types import * 
+from particle_config import ParticleConfig
+from rotor_config import RotorConfig
 
 class RotorGraph(nx.MultiDiGraph):
 

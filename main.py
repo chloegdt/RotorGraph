@@ -7,20 +7,9 @@ RotorConfig = dict[Node, Edge]
 Sinks = set
 
 
-
-
-
-
-
-
-
-
 def main():
     G = RotorGraph.grid(2,2)
     v = Vector()
-
-
-
 
 
 if __name__ == "__main__":

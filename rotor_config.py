@@ -1,9 +1,14 @@
+from types import *
+import rotorgraph
+from vector import Vector
+
+
 class RotorConfig(Vector):
 
-    def __init__(self, configuration: dict or RotorGraph=None):
+    def __init__(self, configuration: dict or rotorgraph.RotorGraph=None):
         if isinstance(configuration, dict):
             self.configuration = configuration
-        elif isinstance(configuration, RotorGraph):
+        elif isinstance(configuration, rotorgraph.RotorGraph):
             self.configuration = {node: edges[0] for node, edges in configuration.rotor_order.items()}
         elif configuration is None:
             self.configuration = dict()
@@ -44,14 +49,14 @@ class RotorConfig(Vector):
 
     def to_graph(self):
         """doc"""
-        subgraph = RotorGraph()
+        subgraph = rotorgraph.RotorGraph()
         for edge in self.configuration.values():
             subgraph.add_edge(edge)
 
         return subgraph
 
 
-    def cycle_pushing(self, rotor_graph: RotorGraph, sinks: set[Node]=set()):
+    def cycle_pushing(self, rotor_graph: rotorgraph.RotorGraph, sinks: set[Node]=set()):
         """
         Cycle push algorithm
         Input:
@@ -63,9 +68,4 @@ class RotorConfig(Vector):
             for cycle in cycles:
                 for edge in cycle:
                     self.configuration[edge[0]] = rotor_graph.turn(edge)
-
-
-
-
-
 
