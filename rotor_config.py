@@ -1,11 +1,11 @@
-from types import *
+from types_definition import *
 import rotorgraph
 from vector import Vector
 
 
 class RotorConfig(Vector):
 
-    def __init__(self, configuration: dict or rotorgraph.RotorGraph=None):
+    def __init__(self, configuration: dict or RotorGraph=None):
         if isinstance(configuration, dict):
             self.configuration = configuration
         elif isinstance(configuration, rotorgraph.RotorGraph):
@@ -56,7 +56,7 @@ class RotorConfig(Vector):
         return subgraph
 
 
-    def cycle_pushing(self, rotor_graph: rotorgraph.RotorGraph, sinks: set[Node]=set()):
+    def cycle_pushing(self, rotor_graph: RotorGraph, sinks: set[Node]=set()):
         """
         Cycle push algorithm
         Input:

@@ -1,6 +1,6 @@
 from vector import Vector
 import rotorgraph
-from types import *
+from types_definition import *
 
 class ParticleConfig(Vector):
 

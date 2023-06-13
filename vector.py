@@ -1,10 +1,16 @@
+from types_definition import *
+import rotorgraph
+import rotor_config
+
 class Vector:
 
     def __init__(self, configuration:dict=None):
         if isinstance(configuration, dict):
             self.configuration = configuration
-        elif isinstance(configuration, RotorGraph):
+        elif isinstance(configuration, rotorgraph.RotorGraph):
             self.configuration = {node: 0 for node in configuration}
+        elif isinstance(configuration, rotor_config.RotorConfig):
+            self.configuration = {edge: 1 for edge in configuration.configuration.values()}
         elif configuration is None:
             self.configuration = dict()
         else:
@@ -16,70 +22,94 @@ class Vector:
     def __repr__(self):
         return repr(self.configuration)
 
-    def __add__(self, other: object or int) -> object:
+    def items(self):
+        return self.configuration.items()
+    
+    def keys(self):
+        return self.configuration.keys()
+
+    def values(self):
+        return self.configuration.values()
+
+    def __add__(self, other: Vector or object) -> Vector:
         """
         Overload the + operator.
-        Case: ParticleConfig + ParticleConfig
-            for each node, do the sum of the particles in both configurations
-        Case: ParticleConfig + integer
-            for each node, add the integer to the number of particles
+        Case: Vector + Vector
+            for each key, do the sum of the values in both vectors
+        Case: Vector + Object (hashable)
+            add one to the vector at the index object
         Input: 
-            - self: particle configuration
-            - other: particle configuration or integer
+            - self: Vector
+            - other: Vector or Object
         Ouput:
-            - new particle configuration
+            - new vector 
         """
         config1 = self.configuration
-        if isinstance(other, ParticleConfig):
+        if isinstance(other, Vector):
             config2 = other.configuration
             res_dic = {n: config1.get(n, 0) + config2.get(n, 0) for n in set(config1) | set(config2)}
-        elif isinstance(other, int):
-            res_dic = {n: k + other for n, k in config1.items()}
         else:
-            raise TypeError("Second operand must be an int or a ParticleConfig")
-        return ParticleConfig(res_dic)
+            try:
+                res_dic = dict(config1)
+                if other in res_dic:
+                    res_dic[other] += 1
+                else:
+                    res_dic[other] = 1
+            except TypeError:
+                raise TypeError("Second operand must be hashable or a Vector")
+        return Vector(res_dic)
 
-    def __radd__(self, other: object or int) -> object:
+    def __radd__(self, other: Vector or object) -> Vector:
         """
         Same method as __add__ except that it makes the + operator commutative. 
         """
         config1 = self.configuration
-        if isinstance(other, ParticleConfig):
+        if isinstance(other, Vector):
             config2 = other.configuration
             res_dic = {n: config1.get(n, 0) + config2.get(n, 0) for n in set(config1) | set(config2)}
-        elif isinstance(other, int):
-            res_dic = {n: k + other for n, k in config1.items()}
         else:
-            raise TypeError("Second operand must be an int or a ParticleConfig")
-        return ParticleConfig(res_dic)
+            try:
+                res_dic = dict(config1)
+                if other in res_dic:
+                    res_dic[other] += 1
+                else:
+                    res_dic[other] = 1
+            except TypeError:
+                raise TypeError("Second operand must be hashable or a Vector")
+        return Vector(res_dic)
 
-    def __sub__(self, other: object or int) -> object:
+    def __sub__(self, other: Vector or object) -> Vector:
         """
         Overload the - operator.
-        Case: ParticleConfig - ParticleConfig
-            for each node, do the substraction of the particles in both configurations
-        Case: ParticleConfig - integer
-            for each node, substract the integer to the number of particles
+        Case: Vector - Vector
+            for each key, do the substraction of the values in both vectors
+        Case: Vector - Object (hashable)
+            substract one to the vector at the index object
         Input: 
-            - self: particle configuration
-            - other: particle configuration or integer
+            - self: Vector
+            - other: Vector or Object
         Ouput:
-            - new particle configuration
+            - new vector 
         """
         config1 = self.configuration
-        if isinstance(other, ParticleConfig):
+        if isinstance(other, Vector):
             config2 = other.configuration
             res_dic = {n: config1.get(n, 0) - config2.get(n, 0) for n in set(config1) | set(config2)}
-        elif isinstance(other, int):
-            res_dic = {n: k - other for n, k in config1.items()}
         else:
-            raise TypeError("Second operand must be an int or a ParticleConfig")
-        return ParticleConfig(res_dic)
+            try:
+                res_dic = dict(config1)
+                if other in res_dic:
+                    res_dic[other] -= 1
+                else:
+                    res_dic[other] = -1
+            except TypeError:
+                raise TypeError("Second operand must be hashable or a Vector")
+        return Vector(res_dic)
 
     def __mul__(self, other: int) -> object:
         """
         Overload the * operator.
-        Case: ParticleConfig * integer
+        Case: Vector * integer
             for each node, multiply the integer to the number of particles
         Input: 
             - self: particle configuration
@@ -92,7 +122,7 @@ class Vector:
             res_dic = {n: k * other for n, k in config1.items()}
         else:
             raise TypeError("Second operand must be an int")
-        return ParticleConfig(res_dic)
+        return Vector(res_dic)
 
     def __rmul__(self, other: int) -> object:
         """
@@ -103,12 +133,12 @@ class Vector:
             res_dic = {n: k * other for n, k in config1.items()}
         else:
             raise TypeError("Second operand must be an int")
-        return ParticleConfig(res_dic)
+        return Vector(res_dic)
 
     def __truediv__(self, other: int) -> object:
         """
         Overload the / operator.
-        Case: ParticleConfig / integer
+        Case: Vector / integer
             for each node, divide the number of particles by an integer
         Input: 
             - self: particle configuration
@@ -121,12 +151,12 @@ class Vector:
             res_dic = {n: k // other for n, k in config1.items()}
         else:
             raise TypeError("Second operand must be an int")
-        return ParticleConfig(res_dic)
+        return Vector(res_dic)
 
     def __floordiv__(self, other: int) -> object:
         """
         Overload the // operator.
-        Case: ParticleConfig // integer
+        Case: Vector // integer
             for each node, divide the number of particles by an integer
         Input: 
             - self: particle configuration
@@ -139,14 +169,14 @@ class Vector:
             res_dic = {n: k // other for n, k in config1.items()}
         else:
             raise TypeError("Second operand must be an int")
-        return ParticleConfig(res_dic)
+        return Vector(res_dic)
 
     def __lt__(self, other: object or int) -> bool:
         """
         Overload the < operator.
-        Case: ParticleConfig < ParticleConfig
+        Case: Vector < Vector
             for each node, compare the particles in both configurations
-        Case: ParticleConfig < integer
+        Case: Vector < integer
             for each node, compare the integer to the number of particles
         Input: 
             - self: particle configuration
@@ -155,7 +185,7 @@ class Vector:
             - True if self < object
         """
         config1 = self.configuration
-        if isinstance(other, ParticleConfig):
+        if isinstance(other, Vector):
             config2 = other.configuration
             for n in set(config1) | set(config2):
                 if config1.get(n, 0) >= config2.get(n, 0):
@@ -167,14 +197,14 @@ class Vector:
                     return False
             return True
         else:
-            raise TypeError("Second operand must be an int or a ParticleConfig")
+            raise TypeError("Second operand must be an int or a Vector")
 
     def __le__(self, other: object or int) -> bool:
         """
         Overload the <= operator.
-        Case: ParticleConfig <= ParticleConfig
+        Case: Vector <= Vector
             for each node, compare the particles in both configurations
-        Case: ParticleConfig <= integer
+        Case: Vector <= integer
             for each node, compare the integer to the number of particles
         Input: 
             - self: particle configuration
@@ -183,7 +213,7 @@ class Vector:
             - True if self <= object
         """
         config1 = self.configuration
-        if isinstance(other, ParticleConfig):
+        if isinstance(other, Vector):
             config2 = other.configuration
             for n in set(config1) | set(config2):
                 if config1.get(n, 0) > config2.get(n, 0):
@@ -195,14 +225,14 @@ class Vector:
                     return False
             return True
         else:
-            raise TypeError("Second operand must be an int or a ParticleConfig")
+            raise TypeError("Second operand must be an int or a Vector")
     
     def __eq__(self, other: object or int) -> bool:
         """
         Overload the == operator.
-        Case: ParticleConfig == ParticleConfig
+        Case: Vector == Vector
             for each node, compare the particles in both configurations
-        Case: ParticleConfig == integer
+        Case: Vector == integer
             for each node, compare the integer to the number of particles
         Input: 
             - self: particle configuration
@@ -211,7 +241,7 @@ class Vector:
             - True if self == object
         """
         config1 = self.configuration
-        if isinstance(other, ParticleConfig):
+        if isinstance(other, Vector):
             config2 = other.configuration
             for n in set(config1) | set(config2):
                 if config1.get(n, 0) != config2.get(n, 0):
@@ -223,14 +253,14 @@ class Vector:
                     return False
             return True
         else:
-            raise TypeError("Second operand must be an int or a ParticleConfig")
+            raise TypeError("Second operand must be an int or a Vector")
     
     def __ne__(self, other: object or int) -> bool:
         """
         Overload the != operator.
-        Case: ParticleConfig != ParticleConfig
+        Case: Vector != Vector
             for each node, compare the particles in both configurations
-        Case: ParticleConfig != integer
+        Case: Vector != integer
             for each node, compare the integer to the number of particles
         Input: 
             - self: particle configuration
@@ -239,7 +269,7 @@ class Vector:
             - True if self != object
         """
         config1 = self.configuration
-        if isinstance(other, ParticleConfig):
+        if isinstance(other, Vector):
             config2 = other.configuration
             for n in set(config1) | set(config2):
                 if config1.get(n, 0) == config2.get(n, 0):
@@ -251,14 +281,14 @@ class Vector:
                     return False
             return True
         else:
-            raise TypeError("Second operand must be an int or a ParticleConfig")
+            raise TypeError("Second operand must be an int or a Vector")
     
     def __gt__(self, other: object or int) -> bool:
         """
         Overload the > operator.
-        Case: ParticleConfig > ParticleConfig
+        Case: Vector > Vector
             for each node, compare the particles in both configurations
-        Case: ParticleConfig > integer
+        Case: Vector > integer
             for each node, compare the integer to the number of particles
         Input: 
             - self: particle configuration
@@ -267,7 +297,7 @@ class Vector:
             - True if self > object
         """
         config1 = self.configuration
-        if isinstance(other, ParticleConfig):
+        if isinstance(other, Vector):
             config2 = other.configuration
             for n in set(config1) | set(config2):
                 if config1.get(n, 0) <= config2.get(n, 0):
@@ -279,14 +309,14 @@ class Vector:
                     return False
             return True
         else:
-            raise TypeError("Second operand must be an int or a ParticleConfig")
+            raise TypeError("Second operand must be an int or a Vector")
 
     def __ge__(self, other: object or int) -> bool:
         """
         Overload the >= operator.
-        Case: ParticleConfig >= ParticleConfig
+        Case: Vector >= Vector
             for each node, compare the particles in both configurations
-        Case: ParticleConfig >= integer
+        Case: Vector >= integer
             for each node, compare the integer to the number of particles
         Input: 
             - self: particle configuration
@@ -295,7 +325,7 @@ class Vector:
             - True if self >= object
         """
         config1 = self.configuration
-        if isinstance(other, ParticleConfig):
+        if isinstance(other, Vector):
             config2 = other.configuration
             for n in set(config1) | set(config2):
                 if config1.get(n, 0) < config2.get(n, 0):
@@ -307,7 +337,7 @@ class Vector:
                     return False
             return True
         else:
-            raise TypeError("Second operand must be an int or a ParticleConfig")
+            raise TypeError("Second operand must be an int or a Vector")
 
         
     def __setitem__(self, index:object, value:object):

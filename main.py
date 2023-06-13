@@ -1,15 +1,16 @@
 import networkx as nx
-
-
-Edge = tuple[object, object, object]
-Node = object
-RotorConfig = dict[Node, Edge]
-Sinks = set
-
+from vector import Vector
+from rotor_config import RotorConfig
+from rotorgraph import RotorGraph
 
 def main():
-    G = RotorGraph.grid(2,2)
-    v = Vector()
+    G = RotorGraph.simple_path()
+    rho = RotorConfig(G)
+    print(rho)
+    a = (1,0,0)
+    v = Vector(rho) - a + G.turn(a)
+    print(v)
+
 
 
 if __name__ == "__main__":
