@@ -1,5 +1,8 @@
 import networkx as nx
+from unionfind import UnionFind
 from types_definition import * 
+from unionfind import UnionFind
+from copy import deepcopy
 
 class RotorGraph(nx.MultiDiGraph):
 
@@ -407,6 +410,63 @@ class RotorGraph(nx.MultiDiGraph):
         return particle_config, rotor_config
 
 
+    def enum_acyclic_configurations(self, sinks:set=None) -> list[set[Edge]]:
+        """
+        !!!!!!!!!!!!!!!!!!!!!!!!
+        Input:
+            - sinks: set of nodes that are considered as sinks
+        Output:
+            - list of acyclic configurations (set of edges)
+        """
+        if sinks == None:
+            if self.sinks:
+                sinks = self.sinks
+            else:
+                raise Exception("No sink in the graph: cannot find an acyclic configuration.")
+
+        nodes = [node for node in self.rotor_order.keys() if node not in sinks]
+        i = 0
+        acyclic_config = list()
+        rotor_configuration = [0 for _ in range(len(nodes))]
+        uf_list = [None for _ in range(len(nodes))]
+        uf_list[0] = UnionFind(list(self.nodes))
+
+        while rotor_configuration[0] < self.out_degree(nodes[0]):
+            if i == len(nodes)-1:
+                if rotor_configuration[i] < self.out_degree(nodes[i]):
+                    edge = self.rotor_order[nodes[i]][rotor_configuration[i]]
+                    if not uf_list[i].connected(edge[0], edge[1]):
+                        acyclic_config.append({self.rotor_order[nodes[i]][rotor_configuration[i]] for i
+                                               in range(len(nodes))})
+                    rotor_configuration[i] += 1
+                else:
+                    rotor_configuration[i] = 0
+                    i -= 1
+                    rotor_configuration[i] += 1
+
+            else:
+                print(i, rotor_configuration[i], self.out_degree(nodes[i]))
+                if rotor_configuration[i] < self.out_degree(nodes[i]):
+                    edge = self.rotor_order[nodes[i]][rotor_configuration[i]]
+                    if not uf_list[i].connected(edge[0], edge[1]):
+                        uf_list[i+1] = deepcopy(uf_list[i])
+                        uf_list[i+1].union(edge[0], edge[1])
+                        i += 1
+                    else:
+                        rotor_configuration[i] += 1
+                else:
+                    rotor_configuration[i] = 0
+                    i -= 1
+                    rotor_configuration[i] += 1
+        return acyclic_config
+
+
+
+    def recurrent(self):
+        """
+        doc
+        """
+        pass
 
 
 def display_path(particle_config: ParticleConfig, rotor_config: RotorConfig):
@@ -443,3 +503,11 @@ def rotor_order2edge_index(rotor_order: dict[Node, list[Edge]]) -> dict:
             dic[edge] = edges.index(edge)
 
     return dic
+
+
+        
+
+
+
+
+
