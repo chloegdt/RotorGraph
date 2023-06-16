@@ -1,6 +1,6 @@
 from types_definition import *
 import rotorgraph
-import rotor_config
+import rotorconfig
 
 class Vector:
 
@@ -9,7 +9,7 @@ class Vector:
             self.configuration = configuration
         elif isinstance(configuration, rotorgraph.RotorGraph):
             self.configuration = {node: 0 for node in configuration}
-        elif isinstance(configuration, rotor_config.RotorConfig):
+        elif isinstance(configuration, rotorconfig.RotorConfig):
             self.configuration = {edge: 1 for edge in configuration.configuration.values()}
         elif configuration is None:
             self.configuration = dict()
@@ -106,16 +106,16 @@ class Vector:
                 raise TypeError("Second operand must be hashable or a Vector")
         return Vector(res_dic)
 
-    def __mul__(self, other: int) -> object:
+    def __mul__(self, other: int) -> Vector:
         """
         Overload the * operator.
         Case: Vector * integer
-            for each node, multiply the integer to the number of particles
+            for each key, multiply the integer to the value
         Input: 
-            - self: particle configuration
+            - self: Vector
             - other: integer
         Ouput:
-            - new particle configuration
+            - new Vector
         """
         config1 = self.configuration
         if isinstance(other, int):
@@ -124,7 +124,7 @@ class Vector:
             raise TypeError("Second operand must be an int")
         return Vector(res_dic)
 
-    def __rmul__(self, other: int) -> object:
+    def __rmul__(self, other: int) -> Vector:
         """
         Same method as __mul__ except that it makes the * operator commutative. 
         """
@@ -135,7 +135,7 @@ class Vector:
             raise TypeError("Second operand must be an int")
         return Vector(res_dic)
 
-    def __truediv__(self, other: int) -> object:
+    def __truediv__(self, other: int) -> Vector:
         """
         Overload the / operator.
         Case: Vector / integer
@@ -153,7 +153,7 @@ class Vector:
             raise TypeError("Second operand must be an int")
         return Vector(res_dic)
 
-    def __floordiv__(self, other: int) -> object:
+    def __floordiv__(self, other: int) -> Vector:
         """
         Overload the // operator.
         Case: Vector // integer
@@ -362,8 +362,6 @@ class Vector:
         Output:
             - the value at the given index
         """
-        self.configuration[index] = value
-
         return self.configuration[index]
 
     def __delitem__(self, index: object):
