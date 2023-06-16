@@ -51,14 +51,21 @@ class RotorConfig(Vector):
         """doc"""
         subgraph = rotorgraph.RotorGraph()
         for edge in self.configuration.values():
-            subgraph.add_edge(edge)
+            subgraph.add_edge(edge[0], edge[1])
 
         return subgraph
 
-
-    def cycle_pushing(self, rotor_graph: RotorGraph, sinks: set[Node]=set()):
+    def cycle_push(self, rotor_graph: RotorGraph, cycle: list[Edge]):
         """
-        Cycle push algorithm
+        doc
+        """
+        for edge in cycle:
+            self.configuration[edge[0]] = rotor_graph.turn(edge)
+
+
+    def destination_forest(self, rotor_graph: RotorGraph, sinks: set[Node]=set()):
+        """
+        The configuration obtained by a maximal cycle push sequence on a rotor configuration 
         Input:
             - sinks: set of nodes that are considered as sinks
         Output:
@@ -66,6 +73,6 @@ class RotorConfig(Vector):
         """
         while cycles := self.find_cycles(sinks):
             for cycle in cycles:
-                for edge in cycle:
-                    self.configuration[edge[0]] = rotor_graph.turn(edge)
+                self.cycle_push(rotor_graph, cycle)
+
 

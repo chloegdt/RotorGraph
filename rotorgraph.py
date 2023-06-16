@@ -1,8 +1,8 @@
 import networkx as nx
-from unionfind import UnionFind
 from types_definition import * 
 from unionfind import UnionFind
 from copy import deepcopy
+import rotor_config
 
 class RotorGraph(nx.MultiDiGraph):
 
@@ -193,6 +193,44 @@ class RotorGraph(nx.MultiDiGraph):
         next_idx = (current_idx + k) % n
         
         return order[next_idx]
+
+    
+    def reverse_turn(self, edge: Edge, k: int=1):
+        """
+        Give the previous edge of the given edge in rotor order
+        Input:
+            - edge: Edge to turn k times
+            - k: number of times to turn (default: one time)
+        Output:
+            - Resulting Edge after the turn
+        """
+        if edge not in self.edges:
+            raise ValueError(f"Invalid edge {edge}")
+
+        order = self.rotor_order[edge[0]]
+        n = len(order)
+        if (n == 1) or (k%n == 0):
+            return edge
+        
+        current_idx = self.edge_index[edge]
+        previous_idx = (current_idx - k) % n
+        
+        return order[previous_idx]
+
+    def reverse_turn_all(self, rotor_config: RotorConfig, sinks: set=None):
+        """
+        !!!!!!!!!!!!!!!!!!!!!
+        """
+        if sinks == None:
+            if self.sinks:
+                sinks = self.sinks
+
+        res_config = deepcopy(rotor_config)
+        for node in rotor_config.configuration.keys():
+            res_config.configuration[node] = self.reverse_turn(rotor_config.configuration[node])
+
+        return res_config
+            
 
     def step(self, particle_config: object, rotor_config: RotorConfig, node: Node=None, sinks: set=None,
              turn_and_move: bool=False):
@@ -436,8 +474,9 @@ class RotorGraph(nx.MultiDiGraph):
                 if rotor_configuration[i] < self.out_degree(nodes[i]):
                     edge = self.rotor_order[nodes[i]][rotor_configuration[i]]
                     if not uf_list[i].connected(edge[0], edge[1]):
-                        acyclic_config.append({self.rotor_order[nodes[i]][rotor_configuration[i]] for i
-                                               in range(len(nodes))})
+                        dic = {nodes[i]: self.rotor_order[nodes[i]][rotor_configuration[i]] for i in range(len(nodes))}
+                        rc = rotor_config.RotorConfig(dic)
+                        acyclic_config.append(rc)
                     rotor_configuration[i] += 1
                 else:
                     rotor_configuration[i] = 0
@@ -445,7 +484,6 @@ class RotorGraph(nx.MultiDiGraph):
                     rotor_configuration[i] += 1
 
             else:
-                print(i, rotor_configuration[i], self.out_degree(nodes[i]))
                 if rotor_configuration[i] < self.out_degree(nodes[i]):
                     edge = self.rotor_order[nodes[i]][rotor_configuration[i]]
                     if not uf_list[i].connected(edge[0], edge[1]):
@@ -462,14 +500,41 @@ class RotorGraph(nx.MultiDiGraph):
 
 
 
-    def recurrent(self):
+    def recurrent_and_acyclic(self, list_acyclic:list[RotorConfig]):
         """
         doc
         """
-        pass
+        rec_acyclic = list()
+        for config in list_acyclic:
+            rec = self.reverse_turn_all(config)
+            acy = deepcopy(rec)
+            acy.destination_forest(self)
+            rec_acyclic.append((rec, acy))
+
+        return rec_acyclic
 
 
-def display_path(particle_config: ParticleConfig, rotor_config: RotorConfig):
+def all_config_from_recurrent(rotor_graph: RotorGraph, rotor_config: RotorConfig, sinks:set=None, set_config: set[RotorConfig]=None):
+    """
+    doc
+    """
+    if set_config == None:
+        set_config = {rotor_config}
+        if sinks == None:
+            if rotor_graph.sinks:
+                sinks = rotor_graph.sinks
+
+    if cycles := rotor_config.find_cycles(sinks):
+        for cycle in cycles:
+            next_config = deepcopy(rotor_config)
+            next_config.cycle_push(rotor_graph, cycle)
+            set_config.add(next_config)
+            all_config_from_recurrent(rotor_graph, next_config, sinks, set_config)
+    return set_config
+
+
+
+def display_path(rotor_config: RotorConfig, particle_config: ParticleConfig):
     """
     Give a graphical representation in the terminal of a simple path graph configuration.
     Input:
