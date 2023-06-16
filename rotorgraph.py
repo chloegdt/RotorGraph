@@ -2,7 +2,8 @@ import networkx as nx
 from types_definition import * 
 from unionfind import UnionFind
 from copy import deepcopy
-import rotor_config
+import rotorconfig
+import particleconfig
 
 class RotorGraph(nx.MultiDiGraph):
 
@@ -14,11 +15,11 @@ class RotorGraph(nx.MultiDiGraph):
         # self.rotor_order = {edge[0]: [e for e in self.edges if e[0] == edge[0]] for edge in self.edges}
 
 
-    def simple_path(n: int = 5):
+    def simple_path(n: int = 5) -> RotorGraph:
         """
         Create a simple path rotor graph with n nodes including two sinks at the extremities 
         Input:
-            - n : the number of nodes in the graph (default : five nodes)
+            - n: the number of nodes in the graph (default : five nodes)
         Output:
             - a simple path rotor graph
         """
@@ -32,7 +33,7 @@ class RotorGraph(nx.MultiDiGraph):
         return graph
 
 
-    def grid(n: int=3, m: int=3):
+    def grid(n: int=3, m: int=3, sinks: str="") -> RotorGraph:
         """
         Create a grid rotor graph n*m nodes
         Input:
@@ -51,6 +52,18 @@ class RotorGraph(nx.MultiDiGraph):
                 if (j+1) in range(m): graph.add_edge(node, node+1)
                 if (node+m) in range(total_nodes): graph.add_edge(node, node+m)
                 if (j-1) in range(m): graph.add_edge(node, node-1)
+
+        sinks = sinks.lower()
+        if sinks in {"border", "borders"}:
+            for i in range(n):
+                graph.set_sink()
+            for i in range(m):
+                graph.set_sink(i, i*m, i*m + m-1, (n-1)*m+i)
+
+        elif sinks in {"corner", "corners"}:
+            graph.set_sink(0, m-1, n*m, m*(n-1), m*n-1)
+        elif sinks in {"center"}:
+            graph.set_sink((n*m) // 2)
 
         return graph
 
@@ -172,7 +185,7 @@ class RotorGraph(nx.MultiDiGraph):
                 raise ValueError(f"The node '{node}' does not correspond to the tail of the edge {edge}")
 
 
-    def turn(self, edge: Edge, k: int=1):
+    def turn(self, edge: Edge, k: int=1) -> Edge:
         """
         Give the next edge of the given edge in rotor order
         Input:
@@ -195,14 +208,14 @@ class RotorGraph(nx.MultiDiGraph):
         return order[next_idx]
 
     
-    def reverse_turn(self, edge: Edge, k: int=1):
+    def reverse_turn(self, edge: Edge, k: int=1) -> Edge:
         """
         Give the previous edge of the given edge in rotor order
         Input:
             - edge: Edge to turn k times
             - k: number of times to turn (default: one time)
         Output:
-            - Resulting Edge after the turn
+            - resulting Edge after the turn
         """
         if edge not in self.edges:
             raise ValueError(f"Invalid edge {edge}")
@@ -217,9 +230,14 @@ class RotorGraph(nx.MultiDiGraph):
         
         return order[previous_idx]
 
-    def reverse_turn_all(self, rotor_config: RotorConfig, sinks: set=None):
+    def reverse_turn_all(self, rotor_config: RotorConfig, sinks: set=None) -> RotorConfig:
         """
-        !!!!!!!!!!!!!!!!!!!!!
+        Turn all edges of the configuration in the reverse order 
+        Input:
+            - rotor_config: the rotor configuration to turn
+            - k: number of times to turn (default: one time)
+        Output:
+            - new resulting Config after the turn
         """
         if sinks == None:
             if self.sinks:
@@ -233,7 +251,7 @@ class RotorGraph(nx.MultiDiGraph):
             
 
     def step(self, particle_config: object, rotor_config: RotorConfig, node: Node=None, sinks: set=None,
-             turn_and_move: bool=False):
+             turn_and_move: bool=False) -> (ParticleConfig, RotorConfig):
         """
         Make one step of routing
         Input:
@@ -257,7 +275,7 @@ class RotorGraph(nx.MultiDiGraph):
             node = particle_config.first_node_with_particle(sinks)
 
             # if no node given or found: nothing changes
-            if node == None: return particle_config
+            if node == None: return particle_config, rotor_config
 
         if turn_and_move:
             # turn
@@ -280,7 +298,7 @@ class RotorGraph(nx.MultiDiGraph):
         return particle_config, rotor_config
 
     def reverse_step(self, particle_config: object, rotor_config: RotorConfig, sinks: set=None,
-             turn_and_move: bool=False):
+             turn_and_move: bool=False) -> (ParticleConfig, RotorConfig):
         """
         Make one step of routing in reverse
         Input:
@@ -305,7 +323,7 @@ class RotorGraph(nx.MultiDiGraph):
             node = particle_config.first_node_with_particle(sinks)
 
             # if no node given or found: nothing changes
-            if node == None: return particle_config
+            if node == None: return particle_config, rotor_config
 
         if turn_and_move:
             # move
@@ -328,7 +346,7 @@ class RotorGraph(nx.MultiDiGraph):
         return particle_config, rotor_config
 
     def legal_routing(self, particle_config: object, rotor_config: RotorConfig, sinks: set=None,
-                      turn_and_move: bool=False) -> object and RotorConfig:
+                      turn_and_move: bool=False) -> (ParticleConfig, RotorConfig):
         """
         Route particles to the sinks
         Input:
@@ -418,7 +436,7 @@ class RotorGraph(nx.MultiDiGraph):
 
 
     def vector_routing(self, particle_config: object, rotor_config: RotorConfig, vector:
-                       dict[Node:int], sinks: set=None, turn_and_move: bool=False) -> object and RotorConfig:
+                       dict[Node:int], sinks: set=None, turn_and_move: bool=False) -> (ParticleConfig, RotorConfig):
         """
         Route the graph according to a given vector optimized with the laplacian matrix
         Input:
@@ -450,7 +468,8 @@ class RotorGraph(nx.MultiDiGraph):
 
     def enum_acyclic_configurations(self, sinks:set=None) -> list[set[Edge]]:
         """
-        !!!!!!!!!!!!!!!!!!!!!!!!
+        Gives a list of all the acyclic rotor configuration of the graph where each represents a
+        class
         Input:
             - sinks: set of nodes that are considered as sinks
         Output:
@@ -475,7 +494,7 @@ class RotorGraph(nx.MultiDiGraph):
                     edge = self.rotor_order[nodes[i]][rotor_configuration[i]]
                     if not uf_list[i].connected(edge[0], edge[1]):
                         dic = {nodes[i]: self.rotor_order[nodes[i]][rotor_configuration[i]] for i in range(len(nodes))}
-                        rc = rotor_config.RotorConfig(dic)
+                        rc = rotorconfig.RotorConfig(dic)
                         acyclic_config.append(rc)
                     rotor_configuration[i] += 1
                 else:
@@ -500,9 +519,13 @@ class RotorGraph(nx.MultiDiGraph):
 
 
 
-    def recurrent_and_acyclic(self, list_acyclic:list[RotorConfig]):
+    def recurrent_and_acyclic(self, list_acyclic:list[RotorConfig]) -> list[tuple[RotorConfig, RotorConfig]]:
         """
-        doc
+        For all acyclic configuration, gives the corresponding recurrent configuration in the class
+        Input:
+            - list_acyclic: the list of all acyclic configuration of the graph
+        Output:
+            - list of tuples (recurrent configuration, acyclic configuration)
         """
         rec_acyclic = list()
         for config in list_acyclic:
@@ -514,9 +537,17 @@ class RotorGraph(nx.MultiDiGraph):
         return rec_acyclic
 
 
-def all_config_from_recurrent(rotor_graph: RotorGraph, rotor_config: RotorConfig, sinks:set=None, set_config: set[RotorConfig]=None):
+def all_config_from_recurrent(rotor_graph: RotorGraph, rotor_config: RotorConfig, sinks:set=None,
+                              set_config: set[RotorConfig]=None) -> set[RotorConfig]:
     """
-    doc
+    Gives all the configuration in the class of the given recurrent configuration
+    Input:
+        - rotor_graph: the RotorGraph of the recurrent configuration
+        - rotor_config: the recurrent RotorConfig of the class
+        - sinks: a set of Node to consider as sink
+        - set_config: the set where to store the RotorConfig
+    Output:
+        - set of all the RotorConfig of the class
     """
     if set_config == None:
         set_config = {rotor_config}
@@ -534,7 +565,7 @@ def all_config_from_recurrent(rotor_graph: RotorGraph, rotor_config: RotorConfig
 
 
 
-def display_path(rotor_config: RotorConfig, particle_config: ParticleConfig):
+def display_path(rotor_config: RotorConfig, particle_config: ParticleConfig=None):
     """
     Give a graphical representation in the terminal of a simple path graph configuration.
     Input:
@@ -542,6 +573,10 @@ def display_path(rotor_config: RotorConfig, particle_config: ParticleConfig):
         - rotor_config: the rotor configuration of the graph
     No output
     """
+    if particle_config == None:
+        n = len(rotor_config.configuration) + 2
+        particle_config = particleconfig.ParticleConfig({i:"x" for i in range(n)})
+
     for i in range(len(particle_config.configuration)-1):
         print(particle_config.configuration[i],end='')
         if (i+1, i, 0) in rotor_config.configuration.values():
@@ -554,7 +589,55 @@ def display_path(rotor_config: RotorConfig, particle_config: ParticleConfig):
     print(particle_config.configuration[len(particle_config.configuration)-1])
 
 
-def rotor_order2edge_index(rotor_order: dict[Node, list[Edge]]) -> dict:
+def display_grid(rotor_config: RotorConfig, n, m, particle_config: ParticleConfig=None):
+    """
+    Give a graphical representation in the terminal of a simple path graph configuration.
+    Input:
+        - particle_config: the particule configuration of the graph
+        - rotor_config: the rotor configuration of the graph
+    No output
+    """
+    if particle_config == None:
+        particle_config = particleconfig.ParticleConfig({i:"x" for i in range(n*m)})
+
+    for j in range(n):
+        for i in range(j*m, j*m+m-1):
+            print(particle_config.configuration[i],end='')
+            if (i+1, i, 0) in rotor_config.configuration.values():
+                print('<',end='')
+            else: print(' ',end='')
+            print('-',end='')
+            if (i, i+1, 0) in rotor_config.configuration.values():
+                print('>',end='')
+            else: print(' ',end='')
+        print(particle_config.configuration[j*m+m-1], end='')
+        print()
+        if j < n-1:
+            for i in range(j*m, j*m+m-1):
+                if (i+m, i, 0) in rotor_config.configuration.values():
+                    print('^',end='')
+                else: print(' ',end='')
+                print('   ',end='')
+            if (i+m, i, 0) in rotor_config.configuration.values():
+                print('^',end='')
+            else: print(' ',end='')
+            print()
+            for i in range(j*m, j*m+m-1):
+                print("|   ", end='')
+            print('|', end='')
+            print()
+            for i in range(j*m, j*m+m-1):
+                if (i, i+m, 0) in rotor_config.configuration.values():
+                    print('v',end='')
+                else: print(' ',end='')
+                print('   ',end='')
+            if (i, i+m, 0) in rotor_config.configuration.values():
+                print('v',end='')
+            else: print(' ',end='')
+            print()
+
+
+def rotor_order2edge_index(rotor_order: dict[Node, list[Edge]]) -> dict[Edge, int]:
     """
     Give the position of the edges in the given rotor order  
     Input :
@@ -568,11 +651,3 @@ def rotor_order2edge_index(rotor_order: dict[Node, list[Edge]]) -> dict:
             dic[edge] = edges.index(edge)
 
     return dic
-
-
-        
-
-
-
-
-
