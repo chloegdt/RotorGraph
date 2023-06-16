@@ -8,7 +8,7 @@ class Vector:
         if isinstance(configuration, dict):
             self.configuration = configuration
         elif isinstance(configuration, rotorgraph.RotorGraph):
-            self.configuration = {node: 0 for node in configuration}
+            self.configuration = {key: 0 for key in configuration}
         elif isinstance(configuration, rotorconfig.RotorConfig):
             self.configuration = {edge: 1 for edge in configuration.configuration.values()}
         elif configuration is None:
@@ -139,12 +139,12 @@ class Vector:
         """
         Overload the / operator.
         Case: Vector / integer
-            for each node, divide the number of particles by an integer
+            for each key, divide the value by an integer
         Input: 
-            - self: particle configuration
+            - self: vector
             - other: integer
         Ouput:
-            - new particle configuration
+            - new vector
         """
         config1 = self.configuration
         if isinstance(other, int):
@@ -157,12 +157,12 @@ class Vector:
         """
         Overload the // operator.
         Case: Vector // integer
-            for each node, divide the number of particles by an integer
+            for each key, divide the values by an integer
         Input: 
-            - self: particle configuration
+            - self: vector
             - other: integer
         Ouput:
-            - new particle configuration
+            - new vector
         """
         config1 = self.configuration
         if isinstance(other, int):
@@ -175,12 +175,12 @@ class Vector:
         """
         Overload the < operator.
         Case: Vector < Vector
-            for each node, compare the particles in both configurations
+            for each key, compare the values in both vectors
         Case: Vector < integer
-            for each node, compare the integer to the number of particles
+            for each key, compare the integer to the values
         Input: 
-            - self: particle configuration
-            - other: particle configuration or integer
+            - self: vector
+            - other: vector or integer
         Ouput:
             - True if self < object
         """
@@ -203,12 +203,12 @@ class Vector:
         """
         Overload the <= operator.
         Case: Vector <= Vector
-            for each node, compare the particles in both configurations
+            for each key, compare the values in both vectors
         Case: Vector <= integer
-            for each node, compare the integer to the number of particles
+            for each key, compare the integer to the values
         Input: 
-            - self: particle configuration
-            - other: particle configuration or integer
+            - self: vector
+            - other: vector or integer
         Ouput:
             - True if self <= object
         """
@@ -231,12 +231,12 @@ class Vector:
         """
         Overload the == operator.
         Case: Vector == Vector
-            for each node, compare the particles in both configurations
+            for each key, compare the values in both vectors
         Case: Vector == integer
-            for each node, compare the integer to the number of particles
+            for each key, compare the integer to the values
         Input: 
-            - self: particle configuration
-            - other: particle configuration or integer
+            - self: vector
+            - other: vector or integer
         Ouput:
             - True if self == object
         """
@@ -259,12 +259,12 @@ class Vector:
         """
         Overload the != operator.
         Case: Vector != Vector
-            for each node, compare the particles in both configurations
+            for each key, compare the values in both vectors
         Case: Vector != integer
-            for each node, compare the integer to the number of particles
+            for each key, compare the integer to the values
         Input: 
-            - self: particle configuration
-            - other: particle configuration or integer
+            - self: vector
+            - other: vector or integer
         Ouput:
             - True if self != object
         """
@@ -287,12 +287,12 @@ class Vector:
         """
         Overload the > operator.
         Case: Vector > Vector
-            for each node, compare the particles in both configurations
+            for each key, compare the values in both vectors
         Case: Vector > integer
-            for each node, compare the integer to the number of particles
+            for each key, compare the integer to the values
         Input: 
-            - self: particle configuration
-            - other: particle configuration or integer
+            - self: vector
+            - other: vector or integer
         Ouput:
             - True if self > object
         """
@@ -315,12 +315,12 @@ class Vector:
         """
         Overload the >= operator.
         Case: Vector >= Vector
-            for each node, compare the particles in both configurations
+            for each key, compare the values in both vectors
         Case: Vector >= integer
-            for each node, compare the integer to the number of particles
+            for each key, compare the integer to the values
         Input: 
-            - self: particle configuration
-            - other: particle configuration or integer
+            - self: vector
+            - other: vector or integer
         Ouput:
             - True if self >= object
         """
