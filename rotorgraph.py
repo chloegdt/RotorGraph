@@ -4,6 +4,7 @@ from unionfind import UnionFind
 from copy import deepcopy
 import rotorconfig
 import particleconfig
+from random import randint
 
 class RotorGraph(nx.MultiDiGraph):
 
@@ -67,6 +68,26 @@ class RotorGraph(nx.MultiDiGraph):
 
         return graph
 
+    def random_graph(min_nb_nodes=5, max_nb_nodes=15) -> RotorGraph:
+        G = RotorGraph()
+        nb_nodes = randint(min_nb_nodes, max_nb_nodes)
+        for i in range(nb_nodes):
+            G.add_edge(i, i+1)
+            #G.add_edge(i+1, i)
+
+        for _ in range(randint(nb_nodes//2, 2*nb_nodes+1)):
+            u = randint(0, nb_nodes)
+            v = randint(0, nb_nodes+1)
+            G.add_edge(u, v)
+
+        
+        G.add_edge(nb_nodes, nb_nodes+1)
+        G.set_sink(nb_nodes+1)
+        for i in range(3):
+            G.set_sink(randint(0, nb_nodes))
+        
+
+        return G
 
 
     def add_edge(self, u_for_edge: Node, v_for_edge: Node, key=None, **attr) -> object:
@@ -398,12 +419,9 @@ class RotorGraph(nx.MultiDiGraph):
             matrix[u] = dict()
             for v in self.nodes:
                 if u == v:
-                    matrix[u][v] = self.out_degree(u)
+                    matrix[u][v] = self.out_degree(u) - self.number_of_edges(u, v)
                 else:
-                    if self.has_edge(u, v):
-                        matrix[u][v] = -1
-                    else:
-                        matrix[u][v] = 0
+                    matrix[u][v] = -self.number_of_edges(u, v)
 
         return matrix
 
@@ -425,12 +443,9 @@ class RotorGraph(nx.MultiDiGraph):
             matrix[u] = dict()
             for v in nodes:
                 if u == v:
-                    matrix[u][v] = self.out_degree(u)
+                    matrix[u][v] = self.out_degree(u) - self.number_of_edges(u, v)
                 else:
-                    if self.has_edge(u, v):
-                        matrix[u][v] = -1
-                    else:
-                        matrix[u][v] = 0
+                    matrix[u][v] = -self.number_of_edges(u, v)
 
         return matrix
 
@@ -482,15 +497,16 @@ class RotorGraph(nx.MultiDiGraph):
                 raise Exception("No sink in the graph: cannot find an acyclic configuration.")
 
         nodes = [node for node in self.rotor_order.keys() if node not in sinks]
-        i = 0
-        acyclic_config = list()
-        rotor_configuration = [0 for _ in range(len(nodes))]
-        uf_list = [None for _ in range(len(nodes))]
-        uf_list[0] = UnionFind(list(self.nodes))
+        i = 0 # index of the node where to chose the next edge
+        acyclic_config = list() # resulting list
+        rotor_configuration = [0 for _ in range(len(nodes))] # take first edges of all nodes
+        uf_list = [None for _ in range(len(nodes))] # set unionfind list
+        uf_list[0] = UnionFind(list(self.nodes)) # create the first unionfind
 
         while rotor_configuration[0] < self.out_degree(nodes[0]):
-            if i == len(nodes)-1:
-                if rotor_configuration[i] < self.out_degree(nodes[i]):
+            if i == len(nodes)-1: # last node
+                if rotor_configuration[i] < self.out_degree(nodes[i]): # not his last edge
+                    # check if adding the edge will not create a cycle
                     edge = self.rotor_order[nodes[i]][rotor_configuration[i]]
                     if not uf_list[i].connected(edge[0], edge[1]):
                         dic = {nodes[i]: self.rotor_order[nodes[i]][rotor_configuration[i]] for i in range(len(nodes))}
