@@ -388,18 +388,23 @@ class RotorGraph(nx.MultiDiGraph):
         if sinks == None:
             sinks = self.sinks
 
-        while particle_config.first_node_with_particle(sinks) != None:
+        while (node := particle_config.first_node_with_particle(sinks)) != None:
             # display_path(particle_config, rotor_config) # debug only
-            particle_config, rotor_config = self.step(particle_config, rotor_config, sinks,
-                                                      turn_and_move)
+            particle_config, rotor_config = self.step(particle_config, rotor_config, node, sinks, turn_and_move)
 
         return particle_config, rotor_config
 
 
 
-    def step_one_particle(self, node: Node, rotor_config: RotorConfig):
-        """A VOIR"""
-        pass
+    def route_one_particle(self, node: Node, rotor_config: RotorConfig, sinks: set=None, turn_and_move: bool=False):
+        """
+        doc
+        """
+        sigma = particleconfig.ParticleConfig() + node
+        particle_config, rotor_config = self.legal_routing(sigma, rotor_config, sinks, turn_and_move)
+        return rotor_config
+
+
 
     def laplacian_matrix(self, sinks: set=None) -> dict[Node, dict[Node, int]]:
         """

@@ -4,11 +4,14 @@ from rotorconfig import RotorConfig
 from rotorgraph import RotorGraph, display_path, all_config_from_recurrent, display_grid
 from particleconfig import ParticleConfig
 
+
 def main():
-    G = RotorGraph.grid()
+    sigma = ParticleConfig()
+    G = RotorGraph.simple_path()
     rho = RotorConfig(G)
-    print(rho)
-    display_grid(rho, 3, 3)
+    display_path(rho)
+    G.route_one_particle(2, rho)
+    display_path(rho)
 
     #ac = G.enum_acyclic_configurations()
     #for config in ac: print(config)

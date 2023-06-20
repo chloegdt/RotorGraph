@@ -1,15 +1,11 @@
 from types_definition import *
-import rotorgraph
-import rotorconfig
 
 class Vector:
 
     def __init__(self, configuration:dict=None):
         if isinstance(configuration, dict):
             self.configuration = configuration
-        elif isinstance(configuration, rotorgraph.RotorGraph):
-            self.configuration = {key: 0 for key in configuration}
-        elif isinstance(configuration, rotorconfig.RotorConfig):
+        elif configuration.__name__ == "RotorConfig":
             self.configuration = {edge: 1 for edge in configuration.configuration.values()}
         elif configuration is None:
             self.configuration = dict()
@@ -57,7 +53,7 @@ class Vector:
                     res_dic[other] = 1
             except TypeError:
                 raise TypeError("Second operand must be hashable or a Vector")
-        return Vector(res_dic)
+        return self.__class__(res_dic)
 
     def __radd__(self, other: Vector or object) -> Vector:
         """
@@ -362,7 +358,7 @@ class Vector:
         Output:
             - the value at the given index
         """
-        return self.configuration[index]
+        return self.configuration.get(index, 0)
 
     def __delitem__(self, index: object):
         """

@@ -1,8 +1,8 @@
 import rotorgraph
 from types_definition import *
-from vector import Vector
+import vector
 
-class ParticleConfig(Vector):
+class ParticleConfig(vector.Vector):
 
     def __init__(self, configuration:dict=None):
         if isinstance(configuration, dict):
@@ -38,8 +38,8 @@ class ParticleConfig(Vector):
             - k: the number of particles to transfer (default: one particle)
         No output
         """
-        self.configuration[u] -= k
-        self.configuration[v] += k
+        self.remove_particles(u, k)
+        self.add_particles(v, k)
 
     def add_particles(self, node:Node, k:int=1):
         """

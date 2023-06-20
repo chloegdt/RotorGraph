@@ -1,9 +1,9 @@
 from types_definition import *
 import rotorgraph
-from vector import Vector
+import vector
 
 
-class RotorConfig(Vector):
+class RotorConfig(vector.Vector):
 
     def __init__(self, configuration: dict or RotorGraph=None):
         if isinstance(configuration, dict):
