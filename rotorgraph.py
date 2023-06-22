@@ -68,7 +68,15 @@ class RotorGraph(nx.MultiDiGraph):
 
         return graph
 
-    def random_graph(min_nb_nodes=5, max_nb_nodes=15) -> RotorGraph:
+    def random_graph(min_nb_nodes:int=5, max_nb_nodes:int=15) -> RotorGraph:
+        """
+        Create a random connected rotor graph with a random number of sinks.
+        Input:
+            - min_nb_nodes: the minimum number of nodes
+            - max_nb_nodes : the maximum number of nodes
+        Output:
+            - the rotor graph
+        """
         G = RotorGraph()
         nb_nodes = randint(min_nb_nodes, max_nb_nodes)
         for i in range(nb_nodes):
@@ -287,6 +295,9 @@ class RotorGraph(nx.MultiDiGraph):
             - new particle configuration
             - new rotor configuration
         """
+        particle_config = deepcopy(particle_config)
+        rotor_config = deepcopy(particle_config)
+
         # retrieve sinks
         if sinks == None: sinks = self.sinks
  
@@ -334,6 +345,9 @@ class RotorGraph(nx.MultiDiGraph):
             - new particle configuration
             - new rotor configuration
         """
+        particle_config = deepcopy(particle_config)
+        rotor_config = deepcopy(particle_config)
+
         # retrieve sinks
         if sinks == None: sinks = self.sinks
  
@@ -376,11 +390,12 @@ class RotorGraph(nx.MultiDiGraph):
             - sinks: set of nodes that are considered as sinks (optional)
             - turn_and_move: boolean (default: False),
                 if True: turn first then move
-                else (False): move first then move
+                else (False): move first then turn
         Output:
             - new particle configuration
             - new rotor configuration
         """
+
         if sinks is None and len(self.sinks) == 0:
             print("Infinite loop")
             return
@@ -396,12 +411,23 @@ class RotorGraph(nx.MultiDiGraph):
 
 
 
-    def route_one_particle(self, node: Node, rotor_config: RotorConfig, sinks: set=None, turn_and_move: bool=False):
+    def route_one_particle(self, node: Node, rotor_config: RotorConfig, sinks: set=None,
+                           turn_and_move: bool=False) -> RotorConfig:
         """
-        doc
+        Route one particule from the given node to a sink.
+        Input:
+            - node: the node where the routed particle starts
+            - rotor_config: the rotor configuration of the graph
+            - sinks: set of nodes that are considered as sinks (optional)
+            - turn_and_move: boolean (default: False)
+                if True: turn first then move
+                else (False): move first then turn
+        Output:
+            - new rotor configuration
         """
+
         sigma = particleconfig.ParticleConfig() + node
-        particle_config, rotor_config = self.legal_routing(sigma, rotor_config, sinks, turn_and_move)
+        particle_config, rotor_config = self.legal_routing(sigma, rc, sinks, turn_and_move)
         return rotor_config
 
 
