@@ -52,7 +52,7 @@ class RotorConfig(vector.Vector):
         Gives the corresponding RotorGraph of the RotorConfig
         Input: None
         Output:
-            - rotorgraph.RotorGraph of the RotorConfig
+            - rotor graph of the RotorConfig
         """
         subgraph = rotorgraph.RotorGraph()
         for edge in self.configuration.values():

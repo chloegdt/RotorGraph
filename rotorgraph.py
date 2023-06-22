@@ -16,7 +16,7 @@ class RotorGraph(nx.MultiDiGraph):
         # self.rotor_order = {edge[0]: [e for e in self.edges if e[0] == edge[0]] for edge in self.edges}
 
 
-    def simple_path(n: int = 5) -> RotorGraph:
+    def simple_path(n:int=5, x:int=1, y:int=1) -> RotorGraph:
         """
         Create a simple path rotor graph with n nodes including two sinks at the extremities 
         Input:
@@ -25,11 +25,13 @@ class RotorGraph(nx.MultiDiGraph):
             - a simple path rotor graph
         """
         graph = RotorGraph()
-        for i in range(n): graph.add_node(i)
-        for i in range(1, n-1):
-            graph.add_edge(i, i-1)
-            graph.add_edge(i, i+1)
-        graph.set_sink(0, n-1)
+        for i in range(n+2): graph.add_node(i)
+        for i in range(1, n+1):
+            for _ in range(y):
+                graph.add_edge(i, i-1)
+            for _ in range(x):
+                graph.add_edge(i, i+1)
+        graph.set_sink(0, n+1)
 
         return graph
 
@@ -296,7 +298,7 @@ class RotorGraph(nx.MultiDiGraph):
             - new rotor configuration
         """
         particle_config = deepcopy(particle_config)
-        rotor_config = deepcopy(particle_config)
+        rotor_config = deepcopy(rotor_config)
 
         # retrieve sinks
         if sinks == None: sinks = self.sinks
@@ -346,7 +348,7 @@ class RotorGraph(nx.MultiDiGraph):
             - new rotor configuration
         """
         particle_config = deepcopy(particle_config)
-        rotor_config = deepcopy(particle_config)
+        rotor_config = deepcopy(rotor_config)
 
         # retrieve sinks
         if sinks == None: sinks = self.sinks
@@ -403,11 +405,13 @@ class RotorGraph(nx.MultiDiGraph):
         if sinks == None:
             sinks = self.sinks
 
+        nb_steps = 0
         while (node := particle_config.first_node_with_particle(sinks)) != None:
             # display_path(particle_config, rotor_config) # debug only
             particle_config, rotor_config = self.step(particle_config, rotor_config, node, sinks, turn_and_move)
+            nb_steps += 1
 
-        return particle_config, rotor_config
+        return particle_config, rotor_config, nb_steps
 
 
 
@@ -427,8 +431,8 @@ class RotorGraph(nx.MultiDiGraph):
         """
 
         sigma = particleconfig.ParticleConfig() + node
-        particle_config, rotor_config = self.legal_routing(sigma, rc, sinks, turn_and_move)
-        return rotor_config
+        particle_config, rotor_config, nb_steps = self.legal_routing(sigma, rotor_config, sinks, turn_and_move)
+        return rotor_config, nb_steps
 
 
 
@@ -510,6 +514,46 @@ class RotorGraph(nx.MultiDiGraph):
                 self.step(particle_config, rotor_config, node=u, sinks=sinks, turn_and_move=turn_and_move)
 
         return particle_config, rotor_config
+
+    def enum_configurations(self, sinks:set=None) -> list[set[Edge]]:
+        """
+        Gives a list of all the rotor configuration of the graph
+        Input:
+            - sinks: set of nodes that are considered as sinks
+        Output:
+            - list of configurations (set of edges)
+        """
+        if sinks == None:
+            if self.sinks:
+                sinks = self.sinks
+            else: raise Exception("No sink in the graph: cannot find an acyclic configuration.")
+
+        nodes = [node for node in self.rotor_order.keys() if node not in sinks]
+        i = 0 # index of the node where to chose the next edge
+        # config_list = list() # resulting list
+        rotor_configuration = [0 for _ in range(len(nodes))] # take first edges of all nodes
+
+        while rotor_configuration[0] < self.out_degree(nodes[0]):
+            if i == len(nodes)-1: # last node
+                if rotor_configuration[i] < self.out_degree(nodes[i]): # not his last edge
+                    dic = {nodes[i]: self.rotor_order[nodes[i]][rotor_configuration[i]] for i in range(len(nodes))}
+                    rc = rotorconfig.RotorConfig(dic)
+                    # config_list.append(rc)
+                    yield rc
+                    rotor_configuration[i] += 1
+                else:
+                    rotor_configuration[i] = 0
+                    i -= 1
+                    rotor_configuration[i] += 1
+
+            else:
+                if rotor_configuration[i] < self.out_degree(nodes[i]):
+                    i += 1
+                else:
+                    rotor_configuration[i] = 0
+                    i -= 1
+                    rotor_configuration[i] += 1
+        # return config_list
 
 
     def enum_acyclic_configurations(self, sinks:set=None) -> list[set[Edge]]:
