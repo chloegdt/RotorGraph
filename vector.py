@@ -5,7 +5,7 @@ class Vector:
     def __init__(self, configuration:dict=None):
         if isinstance(configuration, dict):
             self.configuration = configuration
-        elif configuration.__name__ == "RotorConfig":
+        elif type(configuration).__name__ == "RotorConfig":
             self.configuration = {edge: 1 for edge in configuration.configuration.values()}
         elif configuration is None:
             self.configuration = dict()
