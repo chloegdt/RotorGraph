@@ -28,9 +28,9 @@ class RotorGraph(nx.MultiDiGraph):
         for i in range(n+2): graph.add_node(i)
         for i in range(1, n+1):
             for _ in range(y):
-                graph.add_edge(i, i-1)
-            for _ in range(x):
                 graph.add_edge(i, i+1)
+            for _ in range(x):
+                graph.add_edge(i, i-1)
         graph.set_sink(0, n+1)
 
         return graph
@@ -404,7 +404,7 @@ class RotorGraph(nx.MultiDiGraph):
 
         if sinks == None:
             sinks = self.sinks
-
+        
         nb_steps = 0
         while (node := particle_config.first_node_with_particle(sinks)) != None:
             # display_path(particle_config, rotor_config) # debug only
@@ -430,7 +430,7 @@ class RotorGraph(nx.MultiDiGraph):
             - new rotor configuration
         """
 
-        sigma = particleconfig.ParticleConfig() + node
+        sigma = particleconfig.ParticleConfig(self) + node
         particle_config, rotor_config, nb_steps = self.legal_routing(sigma, rotor_config, sinks, turn_and_move)
         return rotor_config, nb_steps
 
@@ -609,6 +609,19 @@ class RotorGraph(nx.MultiDiGraph):
         return acyclic_config
 
 
+    def recurrent_from_acyclic(self, list_acyclic:list[RotorConfig]) -> list[tuple[RotorConfig, RotorConfig]]:
+        """
+        For all acyclic configuration, gives the corresponding recurrent configuration in the class
+        Input:
+            - list_acyclic: the list of all acyclic configuration of the graph
+        Output:
+            - list of tuples (recurrent configuration, acyclic configuration)
+        """
+        rec = list()
+        for config in list_acyclic:
+            rec.append(self.reverse_turn_all(config))
+
+        return rec
 
     def recurrent_and_acyclic(self, list_acyclic:list[RotorConfig]) -> list[tuple[RotorConfig, RotorConfig]]:
         """
@@ -664,7 +677,7 @@ def display_path(rotor_config: RotorConfig, particle_config: ParticleConfig=None
         - rotor_config: the rotor configuration of the graph
     No output
     """
-    if particle_config == None:
+    if particle_config is None:
         n = len(rotor_config.configuration) + 2
         particle_config = particleconfig.ParticleConfig({i:"x" for i in range(n)})
 
