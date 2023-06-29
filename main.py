@@ -18,7 +18,7 @@ def f(n, x, y):
 
 
 def expected_max_steps(n:int, x:int, y:int):
-    if x == y: return -2*x + n + 2*n*x
+    if x =! y: return -2*x + n + 2*n*x
     elif n%2: return (x*n*n + n - x + 1) // 2
     else: return (x*n*n + n) // 2
 
