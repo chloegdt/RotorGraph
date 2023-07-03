@@ -238,6 +238,25 @@ class RotorGraph(nx.MultiDiGraph):
         
         return order[next_idx]
 
+    def turn_all(self, rotor_config: RotorConfig, sinks: set=None) -> RotorConfig:
+        """
+        Turn all edges of the configuration
+        Input:
+            - rotor_config: the rotor configuration to turn
+            - k: number of times to turn (default: one time)
+        Output:
+            - new resulting Config after the turn
+        """
+        if sinks == None:
+            if self.sinks:
+                sinks = self.sinks
+
+        res_config = deepcopy(rotor_config)
+        for node in rotor_config.configuration.keys():
+            res_config.configuration[node] = self.turn(rotor_config.configuration[node])
+
+        return res_config
+
     
     def reverse_turn(self, edge: Edge, k: int=1) -> Edge:
         """
@@ -619,7 +638,7 @@ class RotorGraph(nx.MultiDiGraph):
         """
         rec = list()
         for config in list_acyclic:
-            rec.append(self.reverse_turn_all(config))
+            rec.append(self.turn_all(config))
 
         return rec
 
@@ -633,7 +652,7 @@ class RotorGraph(nx.MultiDiGraph):
         """
         rec_acyclic = list()
         for config in list_acyclic:
-            rec = self.reverse_turn_all(config)
+            rec = self.turn_all(config)
             acy = deepcopy(rec)
             acy.destination_forest(self)
             rec_acyclic.append((rec, acy))
@@ -653,8 +672,8 @@ def all_config_from_recurrent(rotor_graph: RotorGraph, rotor_config: RotorConfig
     Output:
         - set of all the RotorConfig of the class
     """
-    if set_config == None:
-        set_config = {rotor_config}
+    if set_config is None:
+        set_config = [rotor_config]
         if sinks == None:
             if rotor_graph.sinks:
                 sinks = rotor_graph.sinks
@@ -663,7 +682,8 @@ def all_config_from_recurrent(rotor_graph: RotorGraph, rotor_config: RotorConfig
         for cycle in cycles:
             next_config = deepcopy(rotor_config)
             next_config.cycle_push(rotor_graph, cycle)
-            set_config.add(next_config)
+            if next_config not in set_config:
+                set_config.append(next_config)
             all_config_from_recurrent(rotor_graph, next_config, sinks, set_config)
     return set_config
 
