@@ -98,24 +98,35 @@ def testing_the_test():
                 print(sx, sy, res, e)
         print()
 
-def testing():
-    n, x, y = 4, 3, 3
+def det(graph):
+    from numpy import linalg, array
+    mx = graph.reduced_laplacian_matrix()
+    new_mx = [list(line.values()) for line in mx.values()]
+    n_array = array(new_mx)
+    return linalg.det(n_array)
+
+def testing(n=4,x=2,y=2):
     nb_steps, configs = max_steps(n,x,y)
     G = RotorGraph.simple_path(n, x, y)
-    recurrents = G.recurrent_from_acyclic(G.enum_acyclic_configurations())
+    acy = G.enum_acyclic_configurations()
+    recurrents = G.recurrent_from_acyclic(acy)
 
     print("nombre d'etapes maximal: ", nb_steps)
+    print(f"{len(configs)} configurations:")
     for node, config in configs:
-        display_config(config)
-        print()
-
-        for recurrent in recurrents:
-            if config in all_config_from_recurrent(G, recurrent):
-                display_config(recurrent)
+        display_config(config, node)
 
         if config in recurrents: print(" rec")
         else: print()
-    test_recurrents(n,x,y)
+    #test_recurrents(n,x,y)
+
+def better_testing(n=4,x=2,y=2):
+    print(f"n = {n} | x = {x} | y = {y}")
+    config, node = max_config(n,x,y)
+    display_config(config, node)
+    print()
+    nb_steps = better_max_steps(n,x,y)
+    print("nombre d'etapes maximal: ", nb_steps)
 
 def test_recurrents(n,x,y):
     G = RotorGraph.simple_path(n, x, y)
@@ -140,14 +151,34 @@ def display_config(config, node=None):
 
 
 
+from smithnormalform import matrix, snfproblem, z
+
+def snf_matrix(mat):
+    n = len(mat)
+    m = len(next(iter(mat.values())))
+    values = [z.Z(v) for line in mat.values() for v in line.values()]
+    return matrix.Matrix(n, m, values)
 
 
+if __name__ != "__main__":
+    mat = matrix.Matrix(2, 2, [z.Z(9), z.Z(6), z.Z(12), z.Z(8)])
+    graph = RotorGraph.simple_path(4)
+    L = graph.reduced_laplacian_matrix()
+    for line in L.values():
+        print(line.values())
+    mati = snf_matrix(L)
+    prob = snfproblem.SNFProblem(mat)
+    prob.computeSNF()
+    print(prob.isValid())
+    print(prob.A)
+    print(prob.J)
+    print(prob.S)
+    print(prob.T)
 
-if __name__ == "__main__":
+    print(prob.S * prob.A * prob.T)
+else:
     #testing_the_test()
-    #testing()
-    G = RotorGraph.simple_path()
-    rec = G.recurrent_and_acyclic(G.enum_acyclic_configurations())
-    for rec, acy in rec:
-        for config in all_config_from_recurrent(G, rec): display_path(config)
-        print()
+    #testing(4,5,2)
+    better_testing(4,5,4)
+    better_testing(4,4,4)
+    better_testing(5,4,4)

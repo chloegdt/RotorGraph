@@ -114,7 +114,20 @@ class TestVector(unittest.TestCase):
             self.assertTrue(v2 > randint(0, 20))
             self.assertTrue(v2 >= randint(0, 21))
 
+def expected_max_steps(n:int, x:int, y:int):
+    if x != y: return -2*x + n + 2*n*x
+    elif n%2: return (x*n*n + n - x + 1) // 2
+    else: return (x*n*n + n) // 2
 
+from main import better_max_steps
+
+class TestMaxStep(unittest.TestCase):
+
+    def test_max_steps(self):
+        for n in range(1,20):
+            for x in range(1,20):
+                for y in range(x, x+5):
+                    self.assertTrue(expected_max_steps(n,x,y)==better_max_steps(n,x,y))
 
 
 if __name__ == '__main__':

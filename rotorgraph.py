@@ -423,13 +423,17 @@ class RotorGraph(nx.MultiDiGraph):
 
         if sinks == None:
             sinks = self.sinks
+
+        edge_counter = {edge: 0 for edge in self.edges}
         
         nb_steps = 0
         while (node := particle_config.first_node_with_particle(sinks)) != None:
             # display_path(particle_config, rotor_config) # debug only
+            edge_counter[rotor_config[node]] += 1
             particle_config, rotor_config = self.step(particle_config, rotor_config, node, sinks, turn_and_move)
             nb_steps += 1
 
+        #for edge, counter in edge_counter.items():print(f"{edge}: {counter}")
         return particle_config, rotor_config, nb_steps
 
 
