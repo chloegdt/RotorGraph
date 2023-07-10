@@ -5,10 +5,13 @@ from copy import deepcopy
 import rotorconfig
 import particleconfig
 from random import randint
+from results import Results
+import matrices
 
 class RotorGraph(nx.MultiDiGraph):
 
     def __init__(self, incoming_graph_data=None, multigraph_input=None, **attr):
+        self._sinks = set()
         self.sinks = set()
         self.rotor_order = dict()
         self.edge_index = dict()
@@ -117,9 +120,29 @@ class RotorGraph(nx.MultiDiGraph):
             self.rotor_order[u_for_edge].append(edge)
             self.edge_index[edge] = len(self.rotor_order[u_for_edge]) - 1
         else:
+            if u_for_edge not in self._sinks and u_for_edge in self.sinks:
+                self.sinks.remove(u_for_edge)
             self.rotor_order[u_for_edge] = [edge]
             self.edge_index[edge] = 0
         return key
+
+    def remove_edge(self, *edges) -> object:
+        """
+        Remove an edge to the graph with MultiDiGraph method and update the rotor order
+        Input:
+            - u_for_edge: tail node
+            - v_for_edge: head node
+            - key: identifier (default=lowest unused integer)
+            - attr: keyword arguments, optional
+        Output:
+            The edge key assigned to the edge.
+        """
+        for edge in edges:
+            nx.MultiDiGraph.remove_edge(self, edge[0], edge[1], edge[2])
+            self.rotor_order[edge[0]].remove(edge)
+            del self.edge_index[edge]
+            if len(self.rotor_order[edge[0]]) == 0:
+                self.sinks.add(edge[0])
 
 
     def set_sink(self, *nodes: Node):
@@ -130,6 +153,19 @@ class RotorGraph(nx.MultiDiGraph):
         No output
         """
         self.sinks.update(nodes)
+        self._sinks.update(nodes)
+
+    def remove_sink(self, *nodes: Node):
+        """
+        Set the given nodes as a sink
+        Input:
+            - nodes: multiple Node to set as sink
+        No output
+        """
+        for node in nodes:
+            if len(self.rotor_order[node]) == 0:
+                self.sinks.remove(node)
+        self._sinks -= set(nodes)
 
 
 
@@ -301,7 +337,7 @@ class RotorGraph(nx.MultiDiGraph):
             
 
     def step(self, particle_config: object, rotor_config: RotorConfig, node: Node=None, sinks: set=None,
-             turn_and_move: bool=False) -> (ParticleConfig, RotorConfig):
+             turn_and_move: bool=False, info=None) -> (ParticleConfig, RotorConfig):
         """
         Make one step of routing
         Input:
@@ -348,10 +384,18 @@ class RotorGraph(nx.MultiDiGraph):
             # turn
             rotor_config.configuration[node] = self.turn(edge)
 
+        if info != None:
+            info.edges_counter[edge] += 1
+            info.nodes_counter[succ] += 1
+            info.last_visit[node] = info.nb_steps
+            info.nb_steps += 1
+            info.last_visit[succ] = info.nb_steps
+            info.configuration_history.append((rotor_config, particle_config))
+            
         return particle_config, rotor_config
 
-    def reverse_step(self, particle_config: object, rotor_config: RotorConfig, sinks: set=None,
-             turn_and_move: bool=False) -> (ParticleConfig, RotorConfig):
+    def reverse_step(self, particle_config: object, rotor_config: RotorConfig, node:Node=None, sinks: set=None,
+             turn_and_move: bool=False, info=None) -> (ParticleConfig, RotorConfig):
         """
         Make one step of routing in reverse
         Input:
@@ -373,10 +417,9 @@ class RotorGraph(nx.MultiDiGraph):
         if sinks == None: sinks = self.sinks
  
         # get node
-        node = particle_config.first_node_with_particle(sinks)
         if node == None:
             # try to find the fist non sink node with a particle
-            node = particle_config.first_node_with_particle(sinks)
+            node = particle_config.first_node_with_antiparticle(sinks)
 
             # if no node given or found: nothing changes
             if node == None: return particle_config, rotor_config
@@ -392,13 +435,21 @@ class RotorGraph(nx.MultiDiGraph):
 
         else: # move and turn
             # turn
-            rotor_config.configuration[node] = self.turn(edge)
+            edge = rotor_config.configuration[node]
+            edge = self.turn(edge)
+            rotor_config.configuration[node] = edge
 
             # move
-            edge = rotor_config.configuration[node]
             succ = self.head(edge)
             particle_config.transfer_particles(succ, node)
 
+        if info != None:
+            info.edges_counter[edge] += 1
+            info.nodes_counter[succ] += 1
+            info.last_visit[node] = info.nb_steps
+            info.nb_steps += 1
+            info.last_visit[succ] = info.nb_steps
+            info.configuration_history.append((rotor_config, particle_config))
         return particle_config, rotor_config
 
     def legal_routing(self, particle_config: object, rotor_config: RotorConfig, sinks: set=None,
@@ -424,17 +475,15 @@ class RotorGraph(nx.MultiDiGraph):
         if sinks == None:
             sinks = self.sinks
 
-        edge_counter = {edge: 0 for edge in self.edges}
         
-        nb_steps = 0
+        info = Results(self, particle_config, rotor_config)
         while (node := particle_config.first_node_with_particle(sinks)) != None:
-            # display_path(particle_config, rotor_config) # debug only
-            edge_counter[rotor_config[node]] += 1
-            particle_config, rotor_config = self.step(particle_config, rotor_config, node, sinks, turn_and_move)
-            nb_steps += 1
+            particle_config, rotor_config = self.step(particle_config, rotor_config, node, sinks,
+                                                      turn_and_move, info)
+        info.orientation_edges(rotor_config)
+        info.particles_in_sinks(particle_config)
 
-        #for edge, counter in edge_counter.items():print(f"{edge}: {counter}")
-        return particle_config, rotor_config, nb_steps
+        return particle_config, rotor_config, info
 
 
 
@@ -452,11 +501,45 @@ class RotorGraph(nx.MultiDiGraph):
         Output:
             - new rotor configuration
         """
-
         sigma = particleconfig.ParticleConfig(self) + node
-        particle_config, rotor_config, nb_steps = self.legal_routing(sigma, rotor_config, sinks, turn_and_move)
-        return rotor_config, nb_steps
+        particle_config, rotor_config, info = self.legal_routing(sigma, rotor_config, sinks, turn_and_move)
+        return rotor_config, info
 
+
+    def complete_routing(self, particle_config: ParticleConfig, rotor_config: RotorConfig, sinks: set=None,
+                      turn_and_move: bool=False) -> (ParticleConfig, RotorConfig):
+        """
+        Route particles and antiparticles to the sinks
+        Input:
+            - particle_config: the particle configuration of the graph
+            - rotor_config: the rotor configuration of the graph
+            - sinks: set of nodes that are considered as sinks (optional)
+            - turn_and_move: boolean (default: False),
+                if True: turn first then move
+                else (False): move first then turn
+        Output:
+            - new particle configuration
+            - new rotor configuration
+        """
+
+        if sinks is None and len(self.sinks) == 0:
+            print("Infinite loop")
+            return
+
+        if sinks == None:
+            sinks = self.sinks
+
+        
+        info = Results(self, particle_config, rotor_config)
+        while (node := particle_config.first_node_with_particle(sinks)) != None:
+            particle_config, rotor_config = self.step(particle_config, rotor_config, node, sinks, turn_and_move, info)
+        while (node := particle_config.first_node_with_antiparticle(sinks)) != None:
+            particle_config, rotor_config = self.reverse_step(particle_config, rotor_config, node, sinks, turn_and_move, info)
+
+        info.orientation_edges(rotor_config)
+        info.particles_in_sinks(particle_config)
+
+        return particle_config, rotor_config, info
 
 
     def laplacian_matrix(self, sinks: set=None) -> dict[Node, dict[Node, int]]:
@@ -481,7 +564,7 @@ class RotorGraph(nx.MultiDiGraph):
                 else:
                     matrix[u][v] = -self.number_of_edges(u, v)
 
-        return matrix
+        return matrices.Matrix(matrix)
 
     def reduced_laplacian_matrix(self, sinks: set=None) -> dict[Node, dict[Node, int]]:
         """
@@ -505,7 +588,8 @@ class RotorGraph(nx.MultiDiGraph):
                 else:
                     matrix[u][v] = -self.number_of_edges(u, v)
 
-        return matrix
+        return matrices.Matrix(matrix)
+
 
 
     def vector_routing(self, particle_config: object, rotor_config: RotorConfig, vector:

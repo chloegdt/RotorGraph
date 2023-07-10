@@ -1,15 +1,16 @@
 from types_definition import *
 import rotorgraph
-import vector
 
 
-class RotorConfig(vector.Vector):
+class RotorConfig(object):
 
     def __init__(self, configuration: dict or RotorGraph=None):
         if isinstance(configuration, dict):
             self.configuration = configuration
         elif isinstance(configuration, rotorgraph.RotorGraph):
             self.configuration = {node: edges[0] for node, edges in configuration.rotor_order.items()}
+        elif type(configuration).__name__ == "Vector":
+            self.configuration = {edge[0]: edge for edge, value in configuration.items() if value}
         elif configuration is None:
             self.configuration = dict()
         else:
@@ -20,6 +21,55 @@ class RotorConfig(vector.Vector):
 
     def __repr__(self):
         return repr(self.configuration)
+
+    def items(self):
+        return self.configuration.items()
+    
+    def keys(self):
+        return self.configuration.keys()
+
+    def values(self):
+        return self.configuration.values()
+
+    def __setitem__(self, index:object, value:object):
+        """
+        Overload the assignement operator.
+        Set the value in dict at the given index.
+        Input: 
+            - self: RotorConfig
+            - index: dictionnary key
+            - value: value to store
+        No ouput
+        """
+        self.configuration[index] = value
+
+    def __getitem__(self, index: object):
+        """
+        Overload the getter operator.
+        Return the value in dict at the given index.
+        Input: 
+            - self: RotorConfig
+            - index: dictionnary key
+        Output:
+            - the value at the given index
+        """
+        return self.configuration.get(index, 0)
+
+    def __delitem__(self, index: object):
+        """
+        Overload the deleter operator.
+        Input:
+            - self: RotorConfig
+            - index: dictinnay key
+        No output
+        """
+        del self.configuration[index]
+
+    def __len__(self) -> int:
+        """
+        doc
+        """
+        return len(self.configuration)
 
     def find_cycles(self, sinks: set[Node]=set()) -> list[list[Edge]]:
         """

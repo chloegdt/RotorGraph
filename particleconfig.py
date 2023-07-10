@@ -1,4 +1,3 @@
-import rotorgraph
 from types_definition import *
 import vector
 
@@ -7,7 +6,7 @@ class ParticleConfig(vector.Vector):
     def __init__(self, configuration:dict=None):
         if isinstance(configuration, dict):
             self.configuration = configuration
-        elif isinstance(configuration, rotorgraph.RotorGraph):
+        elif type(configuration).__name__ == "RotorGraph":
             self.configuration = {node: 0 for node in configuration}
         elif configuration is None:
             self.configuration = dict()
@@ -26,6 +25,20 @@ class ParticleConfig(vector.Vector):
         """
         for node, k in self.configuration.items():
             if k > 0 and node not in sinks:
+                return node
+        return None
+
+    def first_node_with_antiparticle(self, sinks: set) -> Node or None:
+        """
+        Find the first (non sink) node which holds at least one antiparticle
+        Input:
+            - sinks: set of nodes that are considered as sinks
+        Output:
+            - the first non sink node with at least antiparticle if there is one
+            else None
+        """
+        for node, k in self.configuration.items():
+            if k < 0 and node not in sinks:
                 return node
         return None
 
@@ -53,6 +66,17 @@ class ParticleConfig(vector.Vector):
             self.configuration[node] += k
         else: self.configuration[node] = k
 
+    def add_all_particles(self, k:int=1):
+        """
+        Add the number of particles on the given node
+        Input:
+            - node: the node where to add k particles 
+            - k: the number of particles (default: one particle)
+        No output
+        """
+        for node in self.configuration:
+            self.configuration[node] += k
+
     def remove_particles(self, node:Node, k:int=1):
         """
         Remove the number of particles on the given node
@@ -74,3 +98,15 @@ class ParticleConfig(vector.Vector):
         No output
         """
         self.configuration[node] = k
+
+    def set_all_particles(self, k:int=1):
+        """
+        Set the number of particles on the given node
+        Input:
+            - node: the node where to set k particles 
+            - k: the number of particles (default: one particle)
+        No output
+        """
+        for node in self.configuration:
+            self.configuration[node] = k
+
