@@ -29,18 +29,28 @@ def particle_configuration():
     print("s2 + 2:", s2 + 2)
 
 def rotor_configuration():
+    """
+    An example of rotor configuration manipulations
+    """
+    #creation of the simple path graph (n = 5 by default)
     G = RotorGraph.simple_path()
+    # creation of the rotor config (dict: node -> edge (tuple))
     rho = RotorConfig(G)
+    # visual representation of the simple path 
     display_path(rho)
 
     edge = (1, 0, 0)
 
+    # set the edge (1, 0, 0) in the rotor config for the node 1
     rho[1] = edge
     display_path(rho)
 
+    # translate the rotor config into a vector
     vec = Vector(rho)
+    # set the next edge according to the rotor order 
     vec = vec - edge + G.turn(edge)
 
+    # tranlaste the vector into a rotor config 
     rho2 = RotorConfig(vec)
 
     display_path(rho2)
