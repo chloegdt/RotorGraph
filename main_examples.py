@@ -67,26 +67,37 @@ def rotor_configuration():
 
 
 def simple_path_graph():
+    """
+    Example of legal routing and complete routing
+    """
+    # creation of the imple path graph with 7 nodes (2 are sinks)
     G = RotorGraph.simple_path(n=5, x=1, y=1)
+    # create the rotor config (dict: node -> edge (tuple))
     rho = RotorConfig(G)
     G.check_rotor_config(rho)
+    # create the particle configuration (dict: Node -> int)
     sigma = ParticleConfig(G)
+    # set 3 particles on every nodes including sinks
     sigma.set_all_particles(3)
 
     display_path(rho, sigma)
 
+
+    # legal routing : only routes particles (no antiparticles) to the sinks 
     sigma, rho, info = G.legal_routing(sigma, rho)
     display_path(rho, sigma)
 
-    # sigma.set_particles(3, -4)
+    # equivalent to sigma.set_particles(3, -4)
+    # set 4 antiparticles on the node 3
     sigma[3] = -4
     display_path(rho, sigma)
 
+    # complete routing : first routes particles, then routes antiparticles
     sigma, rho, info = G.complete_routing(sigma, rho)
+    
+    # display informations about the routing
     print(info)
     display_path(rho, sigma)
-
-
 
 
 def laplacian_matrices():
