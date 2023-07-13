@@ -4,6 +4,18 @@ import vector
 class ParticleConfig(vector.Vector):
 
     def __init__(self, configuration:dict=None):
+        """
+        A class to represent the particles configuration.
+        It inherits all methods of the class Vector.
+        ParticleConfig contains a dictionnary and act as one, 
+        the keys are the nodes and the values are the number of particles
+        ParticleConfig: V -> Z
+        Input:
+            - configuration:
+                - a dictionnary which will become the ParticleConfig
+                - a graph, every nodes of the graph will be initialized with zero particle
+                - None (default) which gives an empty dict
+        """
         if isinstance(configuration, dict):
             self.configuration = configuration
         elif type(configuration).__name__ == "RotorGraph":
@@ -56,7 +68,7 @@ class ParticleConfig(vector.Vector):
 
     def add_particles(self, node:Node, k:int=1):
         """
-        Add the number of particles on the given node
+        Add k on the given node
         Input:
             - node: the node where to add k particles 
             - k: the number of particles (default: one particle)
@@ -68,9 +80,8 @@ class ParticleConfig(vector.Vector):
 
     def add_all_particles(self, k:int=1):
         """
-        Add the number of particles on the given node
+        Add k particles on every nodes
         Input:
-            - node: the node where to add k particles 
             - k: the number of particles (default: one particle)
         No output
         """
@@ -79,7 +90,7 @@ class ParticleConfig(vector.Vector):
 
     def remove_particles(self, node:Node, k:int=1):
         """
-        Remove the number of particles on the given node
+        Remove k particles on the given node
         Input:
             - node: the node where to remove k particles 
             - k: the number of particles (default: one particle)
@@ -89,9 +100,20 @@ class ParticleConfig(vector.Vector):
             self.configuration[node] -= k
         else: self.configuration[node] = -k
 
+    def remove_all_particles(self, node:Node, k:int=1):
+        """
+        Remove k particles on every nodes
+        Input:
+            - k: the number of particles (default: one particle)
+        No output
+        """
+        if node in self.configuration:
+            self.configuration[node] -= k
+        else: self.configuration[node] = -k
+
     def set_particles(self, node:Node, k:int=1):
         """
-        Set the number of particles on the given node
+        Set k particles on the given node
         Input:
             - node: the node where to set k particles 
             - k: the number of particles (default: one particle)
@@ -101,9 +123,8 @@ class ParticleConfig(vector.Vector):
 
     def set_all_particles(self, k:int=1):
         """
-        Set the number of particles on the given node
+        Set k particles on every nodes
         Input:
-            - node: the node where to set k particles 
             - k: the number of particles (default: one particle)
         No output
         """
