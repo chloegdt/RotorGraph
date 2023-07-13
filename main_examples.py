@@ -16,7 +16,7 @@ def particle_configuration():
     # creation of the particle config (dict: Node -> int)
     s1 = ParticleConfig(G)
     # set 5 particles on every node
-    s1.set_all_particles(5)
+    s1.set_all_particles(5)Update main_examples.py
 
     print("s1:", s1)
     # Double all particles 
@@ -70,7 +70,7 @@ def simple_path_graph():
     """
     Example of legal routing and complete routing
     """
-    # creation of the imple path graph with 7 nodes (2 are sinks)
+    # creation of the simple path graph with 7 nodes (n = number of nodes that are not considered as sink)
     G = RotorGraph.simple_path(n=5, x=1, y=1)
     # create the rotor config (dict: node -> edge (tuple))
     rho = RotorConfig(G)
@@ -101,6 +101,9 @@ def simple_path_graph():
 
 
 def laplacian_matrices():
+    """
+    Example of using methods to calculate laplacian matrices and reduced laplacian matrices
+    """
     G = RotorGraph.simple_path()
     L = G.laplacian_matrix()
     rL = G.reduced_laplacian_matrix()
@@ -109,11 +112,17 @@ def laplacian_matrices():
 
 
 def smith_normal_form():
+    """
+    Example of resolving the smith normal form problem
+    """
     G = RotorGraph.simple_path()
     matrix = G.reduced_laplacian_matrix()
     print(matrix)
+    # compute the snf problem
     prob = matrix.snf_problem()
+    # J is the diagonalized matrix
     print(prob.J)
+    # S and T are complementary unimodular matrices
     print(prob.S)
     print(prob.T)
     print(prob.S * prob.A * prob.T)
