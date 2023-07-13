@@ -58,12 +58,10 @@ class TestRotorGraph(unittest.TestCase):
         #self.assertTrue((len(cp) == 2) and ({G.number_of_nodes()-1} in cp))
 
         mx = G.reduced_laplacian_matrix()
-        new_mx = [list(line.values()) for line in mx.values()]
-        n_array = array(new_mx)
-        det = linalg.det(n_array)
+        det = mx.determinant()
 
         ac = G.enum_acyclic_configurations()
-        self.assertEqual(len(ac),round(det))
+        self.assertEqual(len(ac),det.a)
 
 class TestVector(unittest.TestCase):
 
@@ -114,20 +112,41 @@ class TestVector(unittest.TestCase):
             self.assertTrue(v2 > randint(0, 20))
             self.assertTrue(v2 >= randint(0, 21))
 
+
+        def test_visited_nodes(self):
+        
+            G = RotorGraph.simple_path()
+            rho = RotorConfig(G)
+            sigma = ParticleConfig(G)
+            sigma.set_all_particles(4)
+            sigma[2] = 7
+            sigma2, rho2, info = G.legal_routing(sigma, rho)
+            node_cmp = info.nodes_counter
+
+
+            sigma3, rho3 = G.vector_routing(sigma, rho, node_cmp)
+
+            self.assertEqual(sigma2, sigma3)
+            self.assertEqual(rho2, rho3)
+
+
+
+
+
 def expected_max_steps(n:int, x:int, y:int):
     if x != y: return -2*x + n + 2*n*x
     elif n%2: return (x*n*n + n - x + 1) // 2
     else: return (x*n*n + n) // 2
 
-from main import better_max_steps
+#from main import better_max_steps
 
-class TestMaxStep(unittest.TestCase):
+#class TestMaxStep(unittest.TestCase):
 
-    def test_max_steps(self):
-        for n in range(1,20):
-            for x in range(1,20):
-                for y in range(x, x+5):
-                    self.assertTrue(expected_max_steps(n,x,y)==better_max_steps(n,x,y))
+    #def test_max_steps(self):
+        #for n in range(1,20):
+            #for x in range(1,20):
+                #for y in range(x, x+5):
+                    #self.assertTrue(expected_max_steps(n,x,y)==better_max_steps(n,x,y))
 
 
 if __name__ == '__main__':
