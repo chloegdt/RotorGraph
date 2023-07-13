@@ -11,19 +11,24 @@ import matrices
 class RotorGraph(nx.MultiDiGraph):
 
     def __init__(self, incoming_graph_data=None, multigraph_input=None, **attr):
-        self._sinks = set()
-        self.sinks = set()
-        self.rotor_order = dict()
-        self.edge_index = dict()
+        """
+        A class which represent a Multi Directed Rotor Graph.
+        Inherit all mathods from MultiDiGraph of the networkx module
+        """
+        self._sinks = set() # active sinks (setted manually)
+        self.sinks = set() # all sinks (manually and automatically
+        self.rotor_order = dict() # {node: list[edge]}
+        self.edge_index = dict() # {edge: index in the rotor order list}
         nx.MultiDiGraph.__init__(self, incoming_graph_data, multigraph_input, **attr)
-        # self.rotor_order = {edge[0]: [e for e in self.edges if e[0] == edge[0]] for edge in self.edges}
 
 
     def simple_path(n:int=5, x:int=1, y:int=1) -> RotorGraph:
         """
-        Create a simple path rotor graph with n nodes including two sinks at the extremities 
+        Create a simple path rotor graph with n nodes and two sinks at the extremities (so n+2 nodes in total)
         Input:
             - n: the number of nodes in the graph (default : five nodes)
+            - x: number of left edges (default=1)
+            - y: number of right edges (default=1)
         Output:
             - a simple path rotor graph
         """
@@ -45,6 +50,8 @@ class RotorGraph(nx.MultiDiGraph):
         Input:
             - n: number of rows 
             - m: number of columns
+            - sinks: a string describing where the sinks should be (optional, default is no sinks)
+                borders, corners or center
         Output:
             - a grid rotor graph
         """
@@ -126,16 +133,12 @@ class RotorGraph(nx.MultiDiGraph):
             self.edge_index[edge] = 0
         return key
 
-    def remove_edge(self, *edges) -> object:
+    def remove_edge(self, *edges: Edge) -> object:
         """
         Remove an edge to the graph with MultiDiGraph method and update the rotor order
         Input:
-            - u_for_edge: tail node
-            - v_for_edge: head node
-            - key: identifier (default=lowest unused integer)
-            - attr: keyword arguments, optional
-        Output:
-            The edge key assigned to the edge.
+            - edges: multiple Edge to remove
+        No output
         """
         for edge in edges:
             nx.MultiDiGraph.remove_edge(self, edge[0], edge[1], edge[2])
@@ -157,9 +160,9 @@ class RotorGraph(nx.MultiDiGraph):
 
     def remove_sink(self, *nodes: Node):
         """
-        Set the given nodes as a sink
+        Unset the given nodes as a sink
         Input:
-            - nodes: multiple Node to set as sink
+            - nodes: multiple Node to unset
         No output
         """
         for node in nodes:
@@ -274,7 +277,7 @@ class RotorGraph(nx.MultiDiGraph):
         
         return order[next_idx]
 
-    def turn_all(self, rotor_config: RotorConfig, sinks: set=None) -> RotorConfig:
+    def turn_all(self, rotor_config: RotorConfig, k: int=1, sinks: set=None) -> RotorConfig:
         """
         Turn all edges of the configuration
         Input:
@@ -289,7 +292,7 @@ class RotorGraph(nx.MultiDiGraph):
 
         res_config = deepcopy(rotor_config)
         for node in rotor_config.configuration.keys():
-            res_config.configuration[node] = self.turn(rotor_config.configuration[node])
+            res_config.configuration[node] = self.turn(rotor_config.configuration[node], k=k)
 
         return res_config
 
@@ -316,7 +319,7 @@ class RotorGraph(nx.MultiDiGraph):
         
         return order[previous_idx]
 
-    def reverse_turn_all(self, rotor_config: RotorConfig, sinks: set=None) -> RotorConfig:
+    def reverse_turn_all(self, rotor_config: RotorConfig, k: int=1, sinks: set=None) -> RotorConfig:
         """
         Turn all edges of the configuration in the reverse order 
         Input:
@@ -331,7 +334,7 @@ class RotorGraph(nx.MultiDiGraph):
 
         res_config = deepcopy(rotor_config)
         for node in rotor_config.configuration.keys():
-            res_config.configuration[node] = self.reverse_turn(rotor_config.configuration[node])
+            res_config.configuration[node] = self.reverse_turn(rotor_config.configuration[node], k=k)
 
         return res_config
             
@@ -348,6 +351,7 @@ class RotorGraph(nx.MultiDiGraph):
             - turn_and_move: boolean (default: False),
                 if True: turn first then move
                 else (False): move first then move
+            - info: Results to update (optional)
         Output:
             - new particle configuration
             - new rotor configuration
@@ -406,6 +410,7 @@ class RotorGraph(nx.MultiDiGraph):
             - turn_and_move: boolean (default: False),
                 if True: turn first then move
                 else (False): move first then move
+            - info: Results to update (optional)
         Output:
             - new particle configuration
             - new rotor configuration
@@ -556,13 +561,16 @@ class RotorGraph(nx.MultiDiGraph):
             non_sink_nodes = self.nodes - sinks
 
         matrix = dict()
-        for u in non_sink_nodes:
-            matrix[u] = dict()
-            for v in self.nodes:
-                if u == v:
-                    matrix[u][v] = self.out_degree(u) - self.number_of_edges(u, v)
-                else:
-                    matrix[u][v] = -self.number_of_edges(u, v)
+        for u in self.nodes:
+            if u in non_sink_nodes:
+                matrix[u] = dict()
+                for v in self.nodes:
+                    if u == v:
+                        matrix[u][v] = self.out_degree(u) - self.number_of_edges(u, v)
+                    else:
+                        matrix[u][v] = -self.number_of_edges(u, v)
+            else:
+                matrix[u] = {v: 0 for v in self.nodes}
 
         return matrices.Matrix(matrix)
 
@@ -622,7 +630,7 @@ class RotorGraph(nx.MultiDiGraph):
 
         return particle_config, rotor_config
 
-    def enum_configurations(self, sinks:set=None) -> list[set[Edge]]:
+    def enum_configurations(self, sinks:set=None) -> list[RotorConfig]:
         """
         Gives a list of all the rotor configuration of the graph
         Input:
@@ -663,7 +671,7 @@ class RotorGraph(nx.MultiDiGraph):
         # return config_list
 
 
-    def enum_acyclic_configurations(self, sinks:set=None) -> list[set[Edge]]:
+    def enum_acyclic_configurations(self, sinks:set=None) -> list[RotorConfig]:
         """
         Gives a list of all the acyclic rotor configuration of the graph where each represents a
         class
@@ -780,9 +788,14 @@ def all_config_from_recurrent(rotor_graph: RotorGraph, rotor_config: RotorConfig
 def display_path(rotor_config: RotorConfig, particle_config: ParticleConfig=None):
     """
     Give a graphical representation in the terminal of a simple path graph configuration.
+    Examples,
+    if ParticleConfig given:
+        x<- x<- x - x
+    if no ParticleConfig given:
+        3 - 5<->2 - 0
     Input:
-        - particle_config: the particule configuration of the graph
         - rotor_config: the rotor configuration of the graph
+        - particle_config: the particule configuration of the graph (optional)
     No output
     """
     if particle_config is None:
@@ -803,7 +816,7 @@ def display_path(rotor_config: RotorConfig, particle_config: ParticleConfig=None
 
 def display_grid(rotor_config: RotorConfig, n, m, particle_config: ParticleConfig=None):
     """
-    Give a graphical representation in the terminal of a simple path graph configuration.
+    Give a graphical representation in the terminal of a simple grid graph configuration.
     Input:
         - particle_config: the particule configuration of the graph
         - rotor_config: the rotor configuration of the graph
