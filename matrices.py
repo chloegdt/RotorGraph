@@ -14,7 +14,7 @@ class Matrix(matrix.Matrix):
         values = [z.Z(v) for line in obj.values() for v in line.values()]
         matrix.Matrix.__init__(self, n, m, values)
 
-    def snf_problem(self):
+    def snf_problem(self) -> snfproblem.SNFProblem:
         """
         Compute the smith normal form problem of the matrix
         No input
