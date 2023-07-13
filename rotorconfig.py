@@ -5,6 +5,18 @@ import rotorgraph
 class RotorConfig(object):
 
     def __init__(self, configuration: dict or RotorGraph=None):
+        """
+        A class to represent the rotor configuration.
+        RotorConfig contains a dictionnary and act as one, 
+        the keys are the nodes and the values are the next edge to take
+        RotorConfig: V -> A
+        Input:
+            - configuration:
+                - a dictionnary which will become the RotorConfig
+                - a graph, every nodes of the graph will be initialized with the edge in rotor order of the graph
+                - a vector of rotor config {edge: 0 or 1}, translate the vector to a RotorConfig
+                - None (default) which gives an empty dict
+        """
         if isinstance(configuration, dict):
             self.configuration = configuration
         elif isinstance(configuration, rotorgraph.RotorGraph):
@@ -17,18 +29,23 @@ class RotorConfig(object):
             raise TypeError("configuration has to be a dict, RotorGraph or nothing")
 
     def __str__(self):
-        return repr(self.configuration)
+        """dictionnary method"""
+        return str(self.configuration)
 
     def __repr__(self):
+        """dictionnary method"""
         return repr(self.configuration)
 
     def items(self):
+        """dictionnary method"""
         return self.configuration.items()
     
     def keys(self):
+        """dictionnary method"""
         return self.configuration.keys()
 
     def values(self):
+        """dictionnary method"""
         return self.configuration.values()
 
     def __setitem__(self, index:object, value:object):
@@ -66,9 +83,7 @@ class RotorConfig(object):
         del self.configuration[index]
 
     def __len__(self) -> int:
-        """
-        doc
-        """
+        """dictionnary method"""
         return len(self.configuration)
 
     def find_cycles(self, sinks: set[Node]=set()) -> list[list[Edge]]:
