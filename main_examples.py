@@ -128,17 +128,25 @@ def smith_normal_form():
     print(prob.S * prob.A * prob.T)
 
 def acyclic_recurrents():
-    G = RotorGraph.grid(3, 3, "corner")
 
+    # creation of the 3x3 grid 
+    G = RotorGraph.grid(3, 3, "corner")
+    # list all acyclic configurations (acy : list[RotorConfig])
     acy = G.enum_acyclic_configurations()
+    
     for config in acy:
+        # visual representation of the grid 
         display_grid(config, 3, 3)
         print("###########################")
+    # dislay the determinant
     print("det =", G.reduced_laplacian_matrix().determinant())
+    # display the number of acyclic configurations
     print("nb of acyclic =", len(acy))
 
+    #  for all acyclic configuration, gives the corresponding recurrent configuration
     rec = G.recurrent_from_acyclic(acy)
 
+    # give the tuple (rec, acy) for each class
     rec_acy = G.recurrent_and_acyclic(acy)
     for tupl in rec_acy: print(tupl)
 
