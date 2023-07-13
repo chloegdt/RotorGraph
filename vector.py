@@ -3,6 +3,15 @@ from types_definition import *
 class Vector:
 
     def __init__(self, configuration:dict=None):
+        """
+        A class to represent a vector.
+        Vector contains a dictionnary and act as one.
+        Input:
+            - configuration:
+                - a dictionnary which will become the Vector
+                - a RotorConfig, translate the RotorConfig to a Vector {edge: 1 for each edge in the values of the RotorConfig}
+                - None (default) which gives an empty dict
+        """
         if isinstance(configuration, dict):
             self.configuration = configuration
         elif type(configuration).__name__ == "RotorConfig":
@@ -13,18 +22,23 @@ class Vector:
             raise TypeError("configuration has to be a dict, RotorGraph or nothing")
 
     def __str__(self):
-        return repr(self.configuration)
+        """dictionnary method"""
+        return str(self.configuration)
 
     def __repr__(self):
+        """dictionnary method"""
         return repr(self.configuration)
 
     def items(self):
+        """dictionnary method"""
         return self.configuration.items()
     
     def keys(self):
+        """dictionnary method"""
         return self.configuration.keys()
 
     def values(self):
+        """dictionnary method"""
         return self.configuration.values()
 
     def __add__(self, other: Vector or object) -> Vector:
@@ -371,7 +385,5 @@ class Vector:
         del self.configuration[index]
 
     def __len__(self) -> int:
-        """
-        doc
-        """
+        """dictionnary method"""
         return len(self.configuration)
