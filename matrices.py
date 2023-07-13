@@ -3,10 +3,18 @@ from smithnormalform import matrix, snfproblem, z
 class Matrix(matrix.Matrix):
     
     def __init__(self, obj):
-        if type(obj).__name__ == "RotorGraph":
-            obj = obj.laplacian_matrix()
-        elif not isinstance(obj, dict):
-            raise TypeError("obj has to be a RotorGraph or a dict")
+        """
+        This class is mainly usefull for the smith normal form problem.
+        It also inherits methods from the Matrix class of the smithnormalform module like:
+            - determinant
+            - addition and multiplication between two matrices
+            - equality test between two matrices
+        Input:
+            - obj: a dict of dicts
+        No output
+        """
+        if not isinstance(obj, dict):
+            raise TypeError("obj has to be a dict")
         
         self.dictionnary = obj
         n = len(obj)
@@ -17,9 +25,16 @@ class Matrix(matrix.Matrix):
     def snf_problem(self) -> snfproblem.SNFProblem:
         """
         Compute the smith normal form problem of the matrix
+        and return the result as an instance of the class SNFProblem from the module smithnormalform
+        The class SNFProblem has multiple attributes:
+            - A: The Matrix that we want to find the smith normal form of
+            - J: The smith normal form of A
+            - S: The complementary unimodular matrix (line operations)
+            - T: The complementary unimodular matrix (column operations)
+        snfproblem.S * snfproblem.A * snfproblem.T == snfproblem.J
         No input
         Output:
-            - SNFProblem
+            - instance of the class SNFProblem
         """
         prob = snfproblem.SNFProblem(self)
         prob.computeSNF()
@@ -31,7 +46,7 @@ class Matrix(matrix.Matrix):
                     prob.S.set(i,j,prob.S.get(i,j)*z.Z(-1))
         
         if not prob.isValid:
-            raise ValueError("Prob is not valid")
+            raise ValueError("Problem is not valid")
 
         if not (prob.S*self*prob.T == prob.J):
             raise ValueError("J != S*A*T")
