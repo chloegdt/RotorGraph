@@ -128,7 +128,9 @@ def smith_normal_form():
     print(prob.S * prob.A * prob.T)
 
 def acyclic_recurrents():
-
+    """
+    Example of obtaining acyclic and recurrent configurations
+    """
     # creation of the 3x3 grid 
     G = RotorGraph.grid(3, 3, "corner")
     # list all acyclic configurations (acy : list[RotorConfig])
