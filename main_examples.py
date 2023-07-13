@@ -7,25 +7,35 @@ from particleconfig import ParticleConfig
 from matrices import Matrix
 
 def particle_configuration():
+    """
+    An example of particle configuration manipulations
+    """
+    # creation of the simple path graph (n = 5 by default)
     G = RotorGraph.simple_path()
-    
+
+    # creation of the particle config (dict: Node -> int)
     s1 = ParticleConfig(G)
+    # set 5 particles on every node
     s1.set_all_particles(5)
 
     print("s1:", s1)
+    # Double all particles 
     s1 *= 2
     print("s1:", s1)
 
     s2 = ParticleConfig()
+    # set 12 particles on the node 2
     s2[2] = 12
     print("s2:", s2)
 
+    # add the particle configurations s1 and s2
     s3 = s1 + s2
     print("s3=s1+s2: ", s3)
 
     print("s1:", s1)
     print("s2:", s2)
 
+    # add 1 particle on the node 2
     print("s2 + 2:", s2 + 2)
 
 def rotor_configuration():
