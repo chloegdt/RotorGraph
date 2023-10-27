@@ -15,6 +15,10 @@ Table of contents :bookmark:
 
 A tool box for rotor graph research
 
+## Usage
+
+see `main_examples.py`
+
 ## Dependencies
 
 `pip install -r requirement.txt`
