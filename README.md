@@ -1,13 +1,27 @@
-# RotorGraph
+# RotorGraph :gear:
 
 Table of contents :bookmark:
-- [RotorGraph](#Rotorgraph)
-- [Results](#Results)
-- [ParticleConfig](#ParticleConfig)
-- [RotorConfig](#RotorConfig)
-- [Vector](#Vector)
+- [Description](Description)
+- [Dependencies](Dependencies)
+- [Content](Content)
+  - [RotorGraph](Rotorgraph)
+  - [Results](Results)
+  - [ParticleConfig](ParticleConfig)
+  - [RotorConfig](RotorConfig)
+  - [Vector](Vector)
+  - [Matrix](Matrix)
 
-## RotorGraph(class) ##
+## Description
+
+A tool box for rotor graph research
+
+## Dependencies
+
+`pip install -r requirement.txt`
+
+## Content
+
+### RotorGraph(class)
 Simulate a rotor graph from the networkx.MultiDiGraph class
 Methods:
 * **simple_path(n=5, x=1, y=1)**, create a simple path RotorGraph with **n** nodes, **x** left edges, **y** right edges and 2 sinks (extremities)
@@ -38,10 +52,24 @@ Methods:
 * **recurrent_from_acyclic(self, list_acyclic:list[RotorConfig]) -> list[tuple[RotorConfig, RotorConfig]]**, For all acyclic configuration, gives the corresponding recurrent configuration in the class
 * **recurrent_and_acyclic(self, list_acyclic:list[RotorConfig]) -> list[tuple[RotorConfig, RotorConfig]]**, For all acyclic configuration, gives the corresponding recurrent configuration in the class
 
-## Results
+### Results(class)
 
-## ParticleConfig
+Keep track of important informations during a routing:
+- nb_steps: total number of steps for the routing
+- nb_l_edges: number of edges going left (only relevant for simple path graph)
+- nb_r_edges: number of edges going right (only relevant for simple path graph)
+- edges_counter: a dictionnary, {edge: number of times taken}
+- nodes_counter: a dictionnary, {node: number of times taken}
+- nb_particles_in_sinks: a dictionnary, {sink: number of particles}
+- last_visit: a dictionnary, {node: number of the step when it was last visited (between 0 and nb_steps)}
+- configuration_history: the list of the configurations (rotor, particle) from oldest to newest
 
-## RotorConfig
+ℹ️ Possibility to *print* an instance of the class Results
 
-## Vector
+### ParticleConfig(class)
+
+### RotorConfig(class)
+
+### Vector(class)
+
+### Matrix(class)
