@@ -101,3 +101,12 @@ Methodes:
 ### Vector(class)
 
 ### Matrix(class)
+
+This class is mainly usefull for the smith normal form problem.
+It also inherits methods from the Matrix class of the smithnormalform module like:
+            - determinant
+            - addition and multiplication between two matrices
+            - equality test between two matrices
+
+* **snf_problem(self) -> snfproblem.SNFProblem**, compute the smith normal form problem of the matrix and return the result as an instance of the class SNFProblem from the module smithnormalform
+* 
