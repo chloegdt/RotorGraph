@@ -1,6 +1,10 @@
 # RotorGraph :gear:
 
-Table of contents :bookmark:
+## :scroll: Description
+
+A tool box for rotor graph research
+
+## :bookmark: Table of contents
 - [Description](Description)
 - [Dependencies](Dependencies)
 - [Content](Content)
@@ -11,19 +15,24 @@ Table of contents :bookmark:
   - [Vector](Vector)
   - [Matrix](Matrix)
 
-## Description
 
-A tool box for rotor graph research
-
-## Usage
+## :computer: Usage
 
 see `main_examples.py`
 
-## Dependencies
+## :construction: Dependencies
 
+*Python version used : 3.10.10*
+
+To install the dependences needed:  
 `pip install -r requirement.txt`
 
-## Content
+It will install the following modules:
+* networkx
+* smithnormalform
+* pyunionfind
+
+## :file_folder: Content
 
 ### RotorGraph(class)
 Simulate a rotor graph from the networkx.MultiDiGraph class
@@ -56,6 +65,8 @@ Methods:
 * **recurrent_from_acyclic(self, list_acyclic:list[RotorConfig]) -> list[tuple[RotorConfig, RotorConfig]]**, For all acyclic configuration, gives the corresponding recurrent configuration in the class
 * **recurrent_and_acyclic(self, list_acyclic:list[RotorConfig]) -> list[tuple[RotorConfig, RotorConfig]]**, For all acyclic configuration, gives the corresponding recurrent configuration in the class
 
+---
+
 ### Results(class)
 
 Keep track of important informations during a routing:
@@ -69,6 +80,8 @@ Keep track of important informations during a routing:
 - configuration_history: the list of the configurations (rotor, particle) from oldest to newest
 
 ℹ️ Possibility to *print* an instance of the class Results
+
+---
 
 ### ParticleConfig(class)
 
@@ -85,6 +98,8 @@ Keep track of important informations during a routing:
 - **set_particles(self, node:Node, k:int=1)**, set k particles on the given node
 - **set_all_particles(self, k:int=1)**, set k particles on every nodes
 
+---
+
 ### RotorConfig(class)
 
 A class to represent the rotor configuration.  
@@ -98,6 +113,8 @@ Methodes:
 * **cycle_push(self, rotor_graph: RotorGraph, cycle: list[Edge])**, Turn all of the given edges in the RotorConfig
 * **destination_forest(self, rotor_graph: RotorGraph, sinks: set[Node]=set())**, The configuration obtained by a maximal cycle push sequence on a rotor configuration
 
+---
+
 ### Vector(class)
 
 A class to represent a vector.
@@ -105,6 +122,8 @@ Vector contains a dictionnary and act as one.
 
 Methods:
 * main dictionnary methods (items, keys, values...)
+
+---
 
 ### Matrix(class)
 
