@@ -5,15 +5,15 @@
 A tool box for rotor graph research
 
 ## :bookmark: Table of contents
-- [Usage](usage)
-- [Dependencies](dependencies)
-- [Content](Content)
-  - [RotorGraph](Rotorgraph)
-  - [Results](Results)
-  - [ParticleConfig](ParticleConfig)
-  - [RotorConfig](RotorConfig)
-  - [Vector](Vector)
-  - [Matrix](Matrix)
+- [Usage]
+- [Dependencies]
+- [Content]
+  - [RotorGraph]
+  - [Results]
+  - [ParticleConfig]
+  - [RotorConfig]
+  - [Vector]
+  - [Matrix]
 
 
 ## :computer: Usage
