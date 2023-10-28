@@ -87,6 +87,17 @@ Keep track of important informations during a routing:
 
 ### RotorConfig(class)
 
+A class to represent the rotor configuration.  
+RotorConfig contains a dictionnary and act as one, the keys are the nodes and the values are the next edge to take.
+RotorConfig: V &rarr; A
+
+Methodes:
+* main dictionnary methods (items, keys, values...)
+* **find_cycles(self, sinks: set[Node]=set()) -> list[list[Edge]]**, Find all cycles from a rotor configuration
+* **to_graph(self) -> RotorGraph**, Gives the corresponding RotorGraph of the RotorConfig
+* **cycle_push(self, rotor_graph: RotorGraph, cycle: list[Edge])**, Turn all of the given edges in the RotorConfig
+* **destination_forest(self, rotor_graph: RotorGraph, sinks: set[Node]=set())**, The configuration obtained by a maximal cycle push sequence on a rotor configuration
+
 ### Vector(class)
 
 ### Matrix(class)
