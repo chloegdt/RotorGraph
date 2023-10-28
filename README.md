@@ -72,6 +72,19 @@ Keep track of important informations during a routing:
 
 ### ParticleConfig(class)
 
+ A class to represent the particles configuration. It inherits all methods of the class Vector.
+  ParticleConfig contains a dictionnary and act as one, the keys are the nodes and the values are the number of particles ParticleConfig: V -> Z
+
+- **first_node_with_particle:self, sinks: set) -> Node or None**, Find the first (non sink) node which holds at least one particle
+- **first_node_with_antiparticle(self, sinks: set) -> Node or None**, find the first (non sink) node which holds at least one antiparticle
+- **transfer_particles(self, u: Node, v: Node, k: int=1)**, transfer k particles from node u to node v
+- **add_particles(self, node:Node, k:int=1)**, add k on the given node
+- **add_all_particles(self, k:int=1)**, add k particles on every nodes
+- **remove_particles(self, node:Node, k:int=1)**, remove k particles on the given node
+- **remove_all_particles(self, node:Node, k:int=1)**, remove k particles on every nodes
+- **set_particles(self, node:Node, k:int=1)**, set k particles on the given node
+- **set_all_particles(self, k:int=1)**, set k particles on every nodes
+
 ### RotorConfig(class)
 
 ### Vector(class)
