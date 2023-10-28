@@ -7,7 +7,7 @@ A tool box for rotor graph research
 ## :bookmark: Table of contents
 - [Usage](#computer-usage)
 - [Dependencies](#construction-dependencies)
-- [Content](#filefolder-Content)
+- [Content](#file_folder-content)
   - [RotorGraph](#rotorGraph)
   - [Results](#results)
   - [ParticleConfig](#particleconfig)
