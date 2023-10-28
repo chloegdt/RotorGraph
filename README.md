@@ -8,12 +8,12 @@ A tool box for rotor graph research
 - [Usage](#computer-usage)
 - [Dependencies](#construction-dependencies)
 - [Content](#file_folder-content)
-  - [RotorGraph](#rotorGraph)
-  - [Results](#results)
-  - [ParticleConfig](#particleconfig)
-  - [RotorConfig](#rotorconfig)
-  - [Vector](#vector)
-  - [Matrix](#matrix)
+  - [RotorGraph](#rotorgraphclass)
+  - [Results](#resultsclass)
+  - [ParticleConfig](#particleconfigclass)
+  - [RotorConfig](#rotorconfigclass)
+  - [Vector](#vectorclass)
+  - [Matrix](#matrixclass)
 
 
 ## :computer: Usage
