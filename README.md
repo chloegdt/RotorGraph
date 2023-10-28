@@ -5,7 +5,7 @@
 A tool box for rotor graph research
 
 ## :bookmark: Table of contents
-- [Description](Description)
+- [Description](Usage)
 - [Dependencies](Dependencies)
 - [Content](Content)
   - [RotorGraph](Rotorgraph)
